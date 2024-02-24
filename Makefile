@@ -92,7 +92,7 @@ export INCLUDE	:=	$(foreach dir,$(INCLUDES), -iquote $(CURDIR)/$(dir)) \
 #---------------------------------------------------------------------------------
 export LIBPATHS	:= -L$(LIBOGC_LIB) $(foreach dir,$(LIBDIRS),-L$(dir)/lib)
 
-export OUTPUT	:=	$(CURDIR)/$(TARGET)
+export OUTPUT	:=	$(CURDIR)/boot
 .PHONY: $(BUILD) clean
 
 #---------------------------------------------------------------------------------
@@ -107,12 +107,12 @@ clean:
 
 #---------------------------------------------------------------------------------
 run:
-	wiiload $(TARGET).dol
+	wiiload boot.dol
 
 #---------------------------------------------------------------------------------
 release:
 	mkdir -p korbodonut
-	cp $(TARGET).dol meta.xml icon.png ./korbodonut/
+	cp boot.dol meta.xml icon.png ./korbodonut/
 	zip -rv donut ./korbodonut/
 	rm -rf ./korbodonut/
 
