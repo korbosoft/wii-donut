@@ -102,10 +102,12 @@ int main(int argc, char **argv) {
 					int x = 40 + 30 * D * (l * h * m - t * n);
 					int y= 12 + 15 * D * (l * h * n + t * m);
 					int o = x + 80 * y;
-					int N = 48 * ((f * e - c * d * g) * m - c * d * e - f * g - l * d * n);
+
+
+					int N = 12 * ((f * e - c * d * g) * m - c * d * e - f * g - l * d * n);
 					if(22 > y && y > 0 && x > 0 && 80 > x && D > z[o]) {
 						z[o] = D;
-						b[o] = ".'`^\"_,:;Il!i><~+*-?%][}{1)(|\\/tfjrxnuvczmwqpdbkhaoXYUJCLQ0OZ8B#&MW@$"[N > 0 ? N : 0];
+						b[o] = ".^;i+*}j%\\umqkUQM@"[N > 0 ? N : 0];
 					}
 				}
 			}
@@ -129,7 +131,7 @@ int main(int argc, char **argv) {
 		}
 		usleep(30000);
 		printf("\x1b[22;0H");
-		printf("\x1b[40m \x1b[44m.-------------------------------------------------------------------------.\x1b[40m ");
+		printf(" \x1b[44m`-------------------------------------------------------------------------'\x1b[40m");
 		printf(" \x1b[44m| Korbo's Wii Donut Mod v1.0                        (Press HOME to quit.) |\x1b[40m ");
 		printf(" \x1b[44m| Based on the original donut.c by Andy Sloane <andy@a1k0n.net>           |\x1b[40m ");
 		printf(" \x1b[44m| Ported by jornmann <jornmann@duck.com> Modified by Korbo                |\x1b[40m ");

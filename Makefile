@@ -111,10 +111,10 @@ run:
 
 #---------------------------------------------------------------------------------
 release:
-	mkdir -p donut
-	cp $(TARGET).dol meta.xml icon.png donut/
-	zip -rv donut ./donut/
-	rm -rf ./donut/
+	mkdir -p korbodonut
+	cp $(TARGET).dol meta.xml icon.png ./korbodonut/
+	zip -rv donut ./korbodonut/
+	rm -rf ./korbodonut/
 
 #---------------------------------------------------------------------------------
 else
