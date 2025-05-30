@@ -1,17 +1,19 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <app version="1">
-	<name>Korbo's Wii Donut Mod'</name>
-	<version>1.1.0</version>
-	<release_date>20240219000000</release_date>
-	<coder>jornmann, Andy Sloane, Korbo</coder>
-	<short_description>A spinning donut for your Wii!</short_description>
+	<name>Korbo's Wii Donut Mod</name>
+	<version>2.0.0</version>
+	<release_date>20250529000000</release_date>
+	<coder>jornmann, Andy Sloane, korbosoft</coder>
+	<short_description>Korbo's spinning donut for your Wii (and GBA)!</short_description>
 	<long_description>Wii Donut, a spinning donut for your Wii!
 All the hard work was done by Andy Sloane (coding) and Jogeir Liljedahl (the sweet music), I just threw it on a Wii. Modified by Korbo.
+
+GBA Donut requires a GBA link cable plugged in the 2nd controller port.
 
 e-mail:
 jornmann: jornmann@duck.com
 Andy Sloane: andy@a1k0n.net
-Korbo:       korbo@ooer.ooo
+Korbo:       korbin.m.marshall@gmail.com
 
 The background song is "Addiction" by Jogeir Liljedahl.
 </long_description>
