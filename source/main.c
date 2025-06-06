@@ -161,6 +161,8 @@ int main(int argc, char **argv) {
 	bool showMore = false;
 	char splash[41];
 	char title[27];
+	char playlist[256][50];
+	u8 lastIndex;
 
 	//---------------------------------------------------------------------------------
 	// Initialise the video system
@@ -207,12 +209,16 @@ int main(int argc, char **argv) {
 
 	print("\x1b[2;0H" "\x1b[40;37m" "\x1b[2J");
 
-	music_init(title);
+	GRRMOD_Init(true);
+
+	lastIndex = populate_playlist(playlist);
+
+	music_load(title, playlist[0]);
 
 	prepare_rom();
 
 	float A = 1, B = 1;
-	u8 color = 0;
+	u8 color = 0, songNum = 0;
 	do {
 		WPAD_ScanPads();
 		u32 pressed = WPAD_ButtonsDown(0);
@@ -228,6 +234,22 @@ int main(int argc, char **argv) {
 		} else if (pressed & WPAD_BUTTON_B) {
 			music_pause(paused);
 			paused = !paused;
+		} else if (WPAD_ButtonsDown(0) & WPAD_BUTTON_LEFT) {
+			songNum--;
+			if(songNum < 0) {
+				songNum = 0;
+			}
+			GRRMOD_Unload();
+			music_load(title, playlist[songNum]);
+			GRRMOD_Start();
+		} else if (WPAD_ButtonsDown(0) & WPAD_BUTTON_RIGHT) {
+			songNum++;
+			if(songNum > lastIndex) {
+				songNum = lastIndex;
+			}
+			GRRMOD_Unload();
+			music_load(title, playlist[songNum]);
+			GRRMOD_Start();
 		}
 		printf("\x1b[4%um", color);
 		render_frame(A, B);
