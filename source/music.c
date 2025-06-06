@@ -13,11 +13,11 @@ static u8 *module;
 
 void format_title(const char *input, char *output) {
     int paddingNeeded;
-    char prefix[26];
+    char prefix[75];
 
     strcpy(prefix, "Song: ");
     // title text should always be 20 characters long
-    paddingNeeded = calculate_padding(input, 20);
+    paddingNeeded = calculate_padding(input, 69);
     memset(output, ' ', paddingNeeded);
     output[paddingNeeded] = '\0';
     strcat(prefix, input);
