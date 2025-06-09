@@ -11,6 +11,26 @@
 static bool paused = 0;
 static u8 *module;
 
+const char* const moduleTypes[18] = {
+	[0] = "669",
+	[1] = "amf",
+	[2] = "apun",
+	[3] = "dsm",
+	[4] = "far",
+	[5] = "gdm",
+	[6] = "imf",
+	[7] = "it",
+	[8] = "med",
+	[9] = "mod",
+	[10] = "mtm",
+	[11] = "okt",
+	[12] = "s3m",
+	[13] = "stm",
+	[14] = "stx",
+	[15] = "ult",
+	[16] = "uni",
+	[17] = "xm"
+};
 
 void format_title(const char *input, char *output) {
 	int paddingNeeded;
@@ -25,9 +45,22 @@ void format_title(const char *input, char *output) {
 	strcat(output, prefix);
 }
 
-void music_load(char *title_display, const char *path) {
-	char *tmp = "music/";
-	strcat(tmp, path);
+inline bool music_attempt(const char *type) {
+	char tmp[11] = "music.";
+	strcat(tmp, type);
+	return file_exists(tmp);
+}
+
+void music_load(char *title_display) {
+	char tmp[11];
+	u8 i;
+
+	for (i = 0; i < 18; i++) {
+		if (music_attempt(moduleTypes[i])) {
+			strcpy(tmp, moduleTypes[i]);
+		}
+	}
+
 	FILE *f = fopen(tmp, "rb");
 
 	if (f != NULL) {

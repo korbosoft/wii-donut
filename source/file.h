@@ -5,6 +5,5 @@
 #include <stdio.h>
 
 extern bool file_exists(const char *path);
-extern int populate_playlist(char playlist[256][50]);
 
 #endif
