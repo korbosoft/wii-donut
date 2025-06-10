@@ -206,9 +206,7 @@ int main(int argc, char **argv) {
 
 	print("\x1b[2;0H" "\x1b[40;37m" "\x1b[2J");
 
-	GRRMOD_Init(true);
-
-	music_load(title);
+	music_init(title);
 
 	prepare_rom();
 
@@ -252,6 +250,7 @@ int main(int argc, char **argv) {
 			" \x1b[44m╚═════════════════════════════════════════════════════════════════════════╝\x1b[40m", VERSION, splash);
 		}
 		print("\x1b[0;1H");
+		// printf("cwd: %s\n", getcwd(NULL, 0));
 		printf("\x1b[4%um%s", color, title);
 		VIDEO_WaitVSync();
 	} while (true);

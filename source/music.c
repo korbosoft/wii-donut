@@ -45,37 +45,44 @@ void format_title(const char *input, char *output) {
 	strcat(output, prefix);
 }
 
-inline bool music_attempt(const char *type) {
+bool music_attempt(const char *type) {
 	char tmp[11] = "music.";
 	strcat(tmp, type);
 	return file_exists(tmp);
 }
 
-void music_load(char *title_display) {
-	char tmp[11];
+void music_init(char *title_display) {
+	char tmp[20] = "music.";
 	u8 i;
 
 	for (i = 0; i < 18; i++) {
 		if (music_attempt(moduleTypes[i])) {
-			strcpy(tmp, moduleTypes[i]);
+			strcat(tmp, moduleTypes[i]);
+			break;
 		}
 	}
+
 
 	FILE *f = fopen(tmp, "rb");
 
 	if (f != NULL) {
+		if (strcmp(moduleTypes[i], "s3m") == 0) { // certain s3ms supposedly break GRRMOD in stereo
+			GRRMOD_Init(false);
+		} else {
+			GRRMOD_Init(true);
+		}
+
 		fseek(f, 0, SEEK_END);
 		long module_size = ftell(f);
 		rewind(f);
 
-		// allocate memory to contain the whole file:
 		module = (u8 *)malloc(module_size);
 
-		// copy the file into the buffer:
 		fread(module, 1, module_size, f);
 
 		GRRMOD_SetMOD(module,module_size);
 	} else {
+		GRRMOD_Init(true); // music_mod is a mod file, (obviously) so no checks needed
 		GRRMOD_SetMOD(music_mod, music_mod_size);
 	}
 
