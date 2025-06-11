@@ -2,7 +2,7 @@
 // #include <stdio.h>
 #include <malloc.h>
 // #include <unistd.h>
-// #include <string.h>
+#include <string.h>
 #include <stdlib.h>
 // #include <fat.h>
 // fat.h is not needed, as demo is hardcoded; the other three are probably remnants of goombasend

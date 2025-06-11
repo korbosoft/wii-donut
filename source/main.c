@@ -13,7 +13,7 @@
 
 #define TAU 6.2831853071795864
 #define SPLASH_COUNT 5
-#define SCREEN_WIDTH 75
+#define SCREEN_WIDTH 77
 #define SCREEN_HEIGHT 22
 #define SCREEN_SIZE SCREEN_WIDTH * SCREEN_HEIGHT
 static void *xfb = NULL;
@@ -39,40 +39,40 @@ void render_frame(float A, float B) {
 
 
 	// precompute sines and cosines of A and B
-	float cosA = cos(A), sinA = sin(A);
-	float cosB = cos(B), sinB = sin(B);
+	const float cosA = cos(A), sinA = sin(A);
+	const float cosB = cos(B), sinB = sin(B);
 	memset(output, ' ', sizeof(char) * SCREEN_SIZE);
 	memset(zbuffer, 0, sizeof(float) * SCREEN_SIZE);
 
 	// theta goes around the cross-sectional circle of a torus
 	for (float theta=0; theta < TAU; theta += theta_spacing) {
 		// precompute sines and cosines of theta
-		float costheta = cos(theta), sintheta = sin(theta);
+		const float costheta = cos(theta), sintheta = sin(theta);
 
 		// phi goes around the center of revolution of a torus
 		for (float phi=0; phi < TAU; phi += phi_spacing) {
 			// precompute sines and cosines of phi
-			float cosphi = cos(phi), sinphi = sin(phi);
+			const float cosphi = cos(phi), sinphi = sin(phi);
 
 			// the x,y coordinate of the circle, before revolving (factored
 			// out of the above equations)
-			float circlex = R2 + R1 * costheta;
-			float circley = R1 * sintheta;
+			const float circlex = R2 + R1 * costheta;
+			const float circley = R1 * sintheta;
 
 			// final 3D (x,y,z) coordinate after rotations, directly from
 			// our math above
-			float x = circlex * (cosB * cosphi + sinA * sinB * sinphi) - circley * cosA * sinB;
-			float y = circlex * (sinB * cosphi - sinA * cosB * sinphi) + circley * cosA * cosB;
-			float z = K2 + cosA * circlex * sinphi + circley * sinA;
-			float ooz = 1 / z;  // "one over z"
+			const float x = circlex * (cosB * cosphi + sinA * sinB * sinphi) - circley * cosA * sinB;
+			const float y = circlex * (sinB * cosphi - sinA * cosB * sinphi) + circley * cosA * cosB;
+			const float z = K2 + cosA * circlex * sinphi + circley * sinA;
+			const float ooz = 1 / z;  // "one over z"
 
 			// x and y projection.  note that y is negated here, because y
 			// goes up in 3D space but down on 2D displays.
-			int xp = (int) (SCREEN_WIDTH / 2 + K1*ooz*x);
-			int yp = (int) (SCREEN_HEIGHT / 2 - K1*ooz*y);
+			const int xp = (int) (SCREEN_WIDTH / 2 + K1*ooz*x);
+			const int yp = (int) (SCREEN_HEIGHT / 2 - K1*ooz*y);
 
 			// calculate luminance.  ugly, but correct.
-			float L = cosphi * costheta * sinB - cosA * costheta * sinphi - sinA * sintheta + cosB * (cosA * sintheta - costheta * sinA * sinphi);
+			const float L = cosphi * costheta * sinB - cosA * costheta * sinphi - sinA * sintheta + cosB * (cosA * sintheta - costheta * sinA * sinphi);
 			// L ranges from -sqrt(2) to +sqrt(2).  If it's < 0, the surface
 			// is pointing away from us, so we won't bother trying to plot it.
 			if (L > 0) {
@@ -82,7 +82,7 @@ void render_frame(float A, float B) {
 
 				if (ooz > zbuffer[xp][yp]) {
 					zbuffer[xp][yp] = ooz;
-					int luminance_index = L * 8;
+					const int luminance_index = L * 8;
 					// luminance_index is now in the range 0..11 (8*sqrt(2) = 11.3)
 					// now we lookup the character corresponding to the
 					// luminance and plot it in our output:
@@ -94,13 +94,13 @@ void render_frame(float A, float B) {
 
 	// now, dump output[] to the screen.
 	// bring cursor to "home" location
-	print("\x1b[1;1H");
+	print("\x1b[2;0H");
 	for (int j = 0; j < SCREEN_HEIGHT; j++) {
 		for (int i = 0; i < SCREEN_WIDTH; i++) {
 			putchar(output[i][j]);
 		}
 		putchar('\n');
-		printf("\x1b[%u;1H", j+1);
+		printf("\x1b[%u;0H", j+2);
 
 	}
 
@@ -110,13 +110,13 @@ void send_donut(void) {
 	bool prev_paused = paused;
 	music_pause(true);
 
-	print("\x1b[40m\x1b[22;0H"
-	" \x1b[44m╔═════════════════════════════════════════════════════════════════════════╗\x1b[40m "
-	" \x1b[44m║ GBA Donut ┌─┐ Connect your GBA to controller          Press + to cancel ║\x1b[40m "
-	" \x1b[44m║           │Θ│ port 2 with a GBA link cable.      ╒═──═╕                 ║\x1b[40m "
-	" \x1b[44m║           │2│                                    │+░░∞│                 ║\x1b[40m "
-	" \x1b[44m║           └─┘                                    └────┘      Waiting... ║\x1b[40m "
-	" \x1b[44m╚═════════════════════════════════════════════════════════════════════════╝\x1b[40m");
+	print("\x1b[40m" "\x1b[23;0H"
+	"\x1b[1;44m╔═══════════════════════════════════════════════════════════════════════════╗\x1b[40m"
+	"\x1b[1;44m║ GBA Donut ┌─┐ Connect your GBA to controller            Press + to cancel ║\x1b[40m"
+	"\x1b[1;44m║           │Θ│ port 2 with a GBA link cable.        ╒═──═╕                 ║\x1b[40m"
+	"\x1b[1;44m║           │2│                                      │+░░∞│                 ║\x1b[40m"
+	"\x1b[1;44m║           └─┘                                      └────┘      Waiting... ║\x1b[40m"
+	"\x1b[1;44m╚═══════════════════════════════════════════════════════════════════════════╝\x1b[40m");
 
 	while (wait_for_gba()) {
 		WPAD_ScanPads();
@@ -126,34 +126,34 @@ void send_donut(void) {
 		}
 	}
 
-	print("\x1b[22;0H\x1b[40m"
-	" \x1b[44m╔═════════════════════════════════════════════════════════════════════════╗\x1b[40m "
-	" \x1b[44m║ GBA Donut ┌─┐╔═════════════════════════════════════╗                    ║\x1b[40m "
-	" \x1b[44m║           │Θ╪╝                                   ╒═╨─═╕                 ║\x1b[40m "
-	" \x1b[44m║           │2│                                    │+▒▒∞│                 ║\x1b[40m "
-	" \x1b[44m║           └─┘                                    └────┘ Transferring... ║\x1b[40m "
-	" \x1b[44m╚═════════════════════════════════════════════════════════════════════════╝\x1b[40m");
+	print("\x1b[40m" "\x1b[23;0H"
+	"\x1b[1;44m╔═══════════════════════════════════════════════════════════════════════════╗\x1b[40m"
+	"\x1b[1;44m║ GBA Donut ┌─┐╔═══════════════════════════════════════╗                    ║\x1b[40m"
+	"\x1b[1;44m║           │Θ╪╝                                     ╒═╨─═╕                 ║\x1b[40m"
+	"\x1b[1;44m║           │2│                                      │+▒▒∞│                 ║\x1b[40m"
+	"\x1b[1;44m║           └─┘                                      └────┘ Transferring... ║\x1b[40m"
+	"\x1b[1;44m╚═══════════════════════════════════════════════════════════════════════════╝\x1b[40m");
 
 	send_rom();
 
-	print("\x1b[22;0H\x1b[40m"
-	" \x1b[44m╔═════════════════════════════════════════════════════════════════════════╗\x1b[40m "
-	" \x1b[44m║ GBA Donut ┌─┐╔══════════════════√══════════════════╗                    ║\x1b[40m "
-	" \x1b[44m║           │Θ╪╝                                   ╒═╨─═╕                 ║\x1b[40m "
-	" \x1b[44m║           │2│                                    │+▓▓∞│                 ║\x1b[40m "
-	" \x1b[44m║           └─┘                                    └────┘        Success! ║\x1b[40m "
-	" \x1b[44m╚═════════════════════════════════════════════════════════════════════════╝\x1b[40m");
+	print("\x1b[40m" "\x1b[23;0H"
+	"\x1b[1;44m╔═══════════════════════════════════════════════════════════════════════════╗\x1b[40m"
+	"\x1b[1;44m║ GBA Donut ┌─┐╔══════════════════√════════════════════╗                    ║\x1b[40m"
+	"\x1b[1;44m║           │Θ╪╝                                     ╒═╨─═╕                 ║\x1b[40m"
+	"\x1b[1;44m║           │2│                                      │+▓▓∞│                 ║\x1b[40m"
+	"\x1b[1;44m║           └─┘                                      └────┘        Success! ║\x1b[40m"
+	"\x1b[1;44m╚═══════════════════════════════════════════════════════════════════════════╝\x1b[40m");
 
 	sleep(3);
 	music_pause(!prev_paused);
 }
 
 const char* const splashMessages[SPLASH_COUNT] = {
-	[0] = "                      Also try DS Donut!",
-	[1] = "Better than Wii Donut! [citation needed]",
-	[2] = "oh man please to help i am not good with",
-	[3] = "          (\"Doughnut\" if you're british)",
-	[4] = "                         Korbo loves you",
+	[0] = "                        Also try DS Donut!",
+	[1] = "  Better than Wii Donut! [citation needed]",
+	[2] = "oh man please to help i am not good with c",
+	[3] = "            (\"Doughnut\" if you're british)",
+	[4] = "                           Korbo loves you",
 };
 
 //---------------------------------------------------------------------------------
@@ -179,7 +179,8 @@ int main(int argc, char **argv) {
 	xfb = MEM_K0_TO_K1(SYS_AllocateFramebuffer(rmode));
 
 	// Initialise the console, required for printf
-	console_init(xfb,20,20,rmode->fbWidth,rmode->xfbHeight,rmode->fbWidth*VI_DISPLAY_PIX_SZ);
+	console_init(xfb,20,20,rmode->fbWidth-20,rmode->xfbHeight-20,rmode->fbWidth*VI_DISPLAY_PIX_SZ);
+	//SYS_STDIO_Report(true);
 
 	// Set up the video registers with the chosen mode
 	VIDEO_Configure(rmode);
@@ -187,16 +188,18 @@ int main(int argc, char **argv) {
 	// Tell the video hardware where our display memory is
 	VIDEO_SetNextFramebuffer(xfb);
 
+	// Clear the framebuffer
+	VIDEO_ClearFrameBuffer(rmode, xfb, COLOR_BLACK);
+
 	// Make the display visible
-	VIDEO_SetBlack(FALSE);
+	VIDEO_SetBlack(false);
 
 	// Flush the video register changes to the hardware
 	VIDEO_Flush();
 
 	// Wait for Video setup to complete
 	VIDEO_WaitVSync();
-	if (rmode->viTVMode&VI_NON_INTERLACE)
-		VIDEO_WaitVSync();
+	if(rmode->viTVMode&VI_NON_INTERLACE) VIDEO_WaitVSync();
 
 	fatInitDefault();
 
@@ -204,7 +207,7 @@ int main(int argc, char **argv) {
 
 	strcpy(splash, splashMessages[rand() % SPLASH_COUNT] ?: "FLAGRANT SPLASH ERROR");
 
-	print("\x1b[2;0H" "\x1b[40;37m" "\x1b[2J");
+	print("\x1b[2;0H" "\x1b[1;37m" "\x1b[2J");
 
 	music_init(title);
 
@@ -230,26 +233,26 @@ int main(int argc, char **argv) {
 		}
 		printf("\x1b[4%um", color);
 		render_frame(A, B);
-		A += 0.07;
+		A += 0.06;
 		B += 0.03;
 		if (showMore) {
-			print("\x1b[22;0H" "\x1b[40m"
-			" \x1b[44m╔═════════════════════════════════════════════════════════════════════════╗\x1b[40m "
-			" \x1b[44m║ A    - Change BG color                                                  ║\x1b[40m "
-			" \x1b[44m║ B    - Toggle music                                                     ║\x1b[40m "
-			" \x1b[44m║ 1    - Send GBA Donut                                                   ║\x1b[40m "
-			" \x1b[44m║ HOME - Exit                                         Press 2 to go back. ║\x1b[40m "
-			" \x1b[44m╚═════════════════════════════════════════════════════════════════════════╝\x1b[40m");
+			print("\x1b[23;0H" "\x1b[40m"
+			"\x1b[1;44m╔═══════════════════════════════════════════════════════════════════════════╗\x1b[40m"
+			"\x1b[1;44m║ A    - Change BG color                                                    ║\x1b[40m"
+			"\x1b[1;44m║ B    - Toggle music                                                       ║\x1b[40m"
+			"\x1b[1;44m║ 1    - Send GBA Donut                                                     ║\x1b[40m"
+			"\x1b[1;44m║ HOME - Exit                                           Press 2 to go back. ║\x1b[40m"
+			"\x1b[1;44m╚═══════════════════════════════════════════════════════════════════════════╝\x1b[40m");
 		} else {
-			printf("\x1b[22;0H" "\x1b[40m"
-			" \x1b[44m╔═════════════════════════════════════════════════════════════════════════╗\x1b[40m "
-			" \x1b[44m║ Korbo's Wii Donut Mod %s   %s ║\x1b[40m "
-			" \x1b[44m║ Based on the original donut.c by Andy Sloane <andy@a1k0n.net>           ║\x1b[40m "
-			" \x1b[44m║ Ported by emilydaemon <emilydaemon@donut.eu.org>, Modified by Korbo     ║\x1b[40m "
-			" \x1b[44m║ Default Music by Jogeir Liljedahl                Press 2 for more info. ║\x1b[40m "
-			" \x1b[44m╚═════════════════════════════════════════════════════════════════════════╝\x1b[40m", VERSION, splash);
+			printf("\x1b[23;0H" "\x1b[40m"
+			"\x1b[1;44m╔═══════════════════════════════════════════════════════════════════════════╗\x1b[40m"
+			"\x1b[1;44m║ Korbo's Wii Donut Mod %s   %s ║\x1b[40m"
+			"\x1b[1;44m║ Based on the original donut.c by Andy Sloane <andy@a1k0n.net>             ║\x1b[40m"
+			"\x1b[1;44m║ Ported by emilydaemon <emilydaemon@donut.eu.org>, Modified by Korbo       ║\x1b[40m"
+			"\x1b[1;44m║ Default Music by Jogeir Liljedahl                 Press 2 for more info.  ║\x1b[40m"
+			"\x1b[1;44m╚═══════════════════════════════════════════════════════════════════════════╝\x1b[40m", VERSION, splash);
 		}
-		print("\x1b[0;1H");
+		print("\x1b[0;0H");
 		// printf("cwd: %s\n", getcwd(NULL, 0));
 		printf("\x1b[4%um%s", color, title);
 		VIDEO_WaitVSync();
