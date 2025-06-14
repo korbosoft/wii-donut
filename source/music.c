@@ -34,11 +34,11 @@ const char* const moduleTypes[18] = {
 
 void format_title(const char *input, char *output) {
 	int paddingNeeded;
-	char prefix[75];
+	char prefix[82];
 
-	strcpy(prefix, "Song: ");
-	// title text should always be 20 characters long
-	paddingNeeded = calculate_padding(input, 69);
+	strcpy(prefix, "\e[4mSong: ");
+
+	paddingNeeded = calculate_padding(input, 71);
 	memset(output, ' ', paddingNeeded);
 	output[paddingNeeded] = '\0';
 	strcat(prefix, input);
@@ -52,7 +52,7 @@ bool music_attempt(const char *type) {
 }
 
 void music_init(char *title_display) {
-	char tmp[20] = "music.";
+	char tmp[11] = "music.";
 	u8 i;
 
 	for (i = 0; i < 18; i++) {
@@ -94,6 +94,7 @@ void music_init(char *title_display) {
 
 void music_free(void) {
 	free(module);
+	GRRMOD_End();
 }
 
 void music_pause(const bool pause) {

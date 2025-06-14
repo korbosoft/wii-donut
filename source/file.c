@@ -1,6 +1,6 @@
 #include "file.h"
 
-bool file_exists(const char *path) {
+inline bool file_exists(const char *path) {
 	FILE *f = fopen(path, "rb");
 	if (f != NULL) {
 		fclose(f);

@@ -11,7 +11,7 @@
 #include "music.h"
 #include "text.h"
 
-#define TAU 6.2831853071795864
+#define PI_TIMES_2 6.2831853071795865
 #define SPLASH_COUNT 5
 #define SCREEN_WIDTH 77
 #define SCREEN_HEIGHT 22
@@ -45,12 +45,12 @@ void render_frame(float A, float B) {
 	memset(zbuffer, 0, sizeof(float) * SCREEN_SIZE);
 
 	// theta goes around the cross-sectional circle of a torus
-	for (float theta=0; theta < TAU; theta += theta_spacing) {
+	for (float theta=0; theta < PI_TIMES_2; theta += theta_spacing) {
 		// precompute sines and cosines of theta
 		const float costheta = cos(theta), sintheta = sin(theta);
 
 		// phi goes around the center of revolution of a torus
-		for (float phi=0; phi < TAU; phi += phi_spacing) {
+		for (float phi=0; phi < PI_TIMES_2; phi += phi_spacing) {
 			// precompute sines and cosines of phi
 			const float cosphi = cos(phi), sinphi = sin(phi);
 
@@ -94,13 +94,13 @@ void render_frame(float A, float B) {
 
 	// now, dump output[] to the screen.
 	// bring cursor to "home" location
-	print("\x1b[2;0H");
+	print("\e[2;0H");
 	for (int j = 0; j < SCREEN_HEIGHT; j++) {
 		for (int i = 0; i < SCREEN_WIDTH; i++) {
 			putchar(output[i][j]);
 		}
 		putchar('\n');
-		printf("\x1b[%u;0H", j+2);
+		printf("\e[%u;0H", j+2);
 
 	}
 
@@ -110,13 +110,13 @@ void send_donut(void) {
 	bool prev_paused = paused;
 	music_pause(true);
 
-	print("\x1b[40m" "\x1b[23;0H"
-	"\x1b[1;44m╔═══════════════════════════════════════════════════════════════════════════╗\x1b[40m"
-	"\x1b[1;44m║ GBA Donut ┌─┐ Connect your GBA to controller            Press + to cancel ║\x1b[40m"
-	"\x1b[1;44m║           │Θ│ port 2 with a GBA link cable.        ╒═──═╕                 ║\x1b[40m"
-	"\x1b[1;44m║           │2│                                      │+░░∞│                 ║\x1b[40m"
-	"\x1b[1;44m║           └─┘                                      └────┘      Waiting... ║\x1b[40m"
-	"\x1b[1;44m╚═══════════════════════════════════════════════════════════════════════════╝\x1b[40m");
+	print("\e[40m" "\e[23;0H"
+	"\e[104m╔═══════════════════════════════════════════════════════════════════════════╗\e[40m"
+	"\e[104m║ GBA Donut ┌─┐ Connect your GBA to controller port       Press + to cancel ║\e[40m"
+	"\e[104m║           │Θ│ 2 with a GBA link cable.             ╒═──═╕                 ║\e[40m"
+	"\e[104m║           │2│                                      │+░░∞│                 ║\e[40m"
+	"\e[104m║           └─┘                                      └────┘      Waiting... ║\e[40m"
+	"\e[104m╚═══════════════════════════════════════════════════════════════════════════╝\e[40m");
 
 	while (wait_for_gba()) {
 		WPAD_ScanPads();
@@ -126,23 +126,23 @@ void send_donut(void) {
 		}
 	}
 
-	print("\x1b[40m" "\x1b[23;0H"
-	"\x1b[1;44m╔═══════════════════════════════════════════════════════════════════════════╗\x1b[40m"
-	"\x1b[1;44m║ GBA Donut ┌─┐╔═══════════════════════════════════════╗                    ║\x1b[40m"
-	"\x1b[1;44m║           │Θ╪╝                                     ╒═╨─═╕                 ║\x1b[40m"
-	"\x1b[1;44m║           │2│                                      │+▒▒∞│                 ║\x1b[40m"
-	"\x1b[1;44m║           └─┘                                      └────┘ Transferring... ║\x1b[40m"
-	"\x1b[1;44m╚═══════════════════════════════════════════════════════════════════════════╝\x1b[40m");
+	print("\e[40m" "\e[23;0H"
+	"\e[104m╔═══════════════════════════════════════════════════════════════════════════╗\e[40m"
+	"\e[104m║ \e[4mGBA Donut\e[0m\e[104;37m ┌─┐╔═══════════════════════════════════════╗                    ║\e[40m"
+	"\e[104m║           │Θ╪╝                                     ╒═╨─═╕                 ║\e[40m"
+	"\e[104m║           │2│                                      │+▒▒∞│                 ║\e[40m"
+	"\e[104m║           └─┘                                      └────┘ Transferring... ║\e[40m"
+	"\e[104m╚═══════════════════════════════════════════════════════════════════════════╝\e[40m");
 
 	send_rom();
 
-	print("\x1b[40m" "\x1b[23;0H"
-	"\x1b[1;44m╔═══════════════════════════════════════════════════════════════════════════╗\x1b[40m"
-	"\x1b[1;44m║ GBA Donut ┌─┐╔══════════════════√════════════════════╗                    ║\x1b[40m"
-	"\x1b[1;44m║           │Θ╪╝                                     ╒═╨─═╕                 ║\x1b[40m"
-	"\x1b[1;44m║           │2│                                      │+▓▓∞│                 ║\x1b[40m"
-	"\x1b[1;44m║           └─┘                                      └────┘        Success! ║\x1b[40m"
-	"\x1b[1;44m╚═══════════════════════════════════════════════════════════════════════════╝\x1b[40m");
+	print("\e[40m" "\e[23;0H"
+	"\e[104m╔═══════════════════════════════════════════════════════════════════════════╗\e[40m"
+	"\e[104m║ \e[4mGBA Donut\e[0m\e[104;37m ┌─┐╔══════════════════√════════════════════╗                    ║\e[40m"
+	"\e[104m║           │Θ╪╝                                     ╒═╨─═╕                 ║\e[40m"
+	"\e[104m║           │2│                                      │+▓▓∞│                 ║\e[40m"
+	"\e[104m║           └─┘                                      └────┘        Success! ║\e[40m"
+	"\e[104m╚═══════════════════════════════════════════════════════════════════════════╝\e[40m");
 
 	sleep(3);
 	music_pause(!prev_paused);
@@ -157,9 +157,9 @@ const char* const splashMessages[SPLASH_COUNT] = {
 };
 
 //---------------------------------------------------------------------------------
-int main(int argc, char **argv) {
+int main() {
 	bool showMore = false;
-	char splash[41], title[27];
+	char splash[41], title[82];
 
 	//---------------------------------------------------------------------------------
 	// Initialise the video system
@@ -207,7 +207,7 @@ int main(int argc, char **argv) {
 
 	strcpy(splash, splashMessages[rand() % SPLASH_COUNT] ?: "FLAGRANT SPLASH ERROR");
 
-	print("\x1b[2;0H" "\x1b[1;37m" "\x1b[2J");
+	print("\e[2;0H" "\e[37m" "\e[2J");
 
 	music_init(title);
 
@@ -231,32 +231,31 @@ int main(int argc, char **argv) {
 			music_pause(paused);
 			paused = !paused;
 		}
-		printf("\x1b[4%um", color);
+		printf("\e[0m" "\e[4%um", color);
 		render_frame(A, B);
 		A += 0.06;
 		B += 0.03;
 		if (showMore) {
-			print("\x1b[23;0H" "\x1b[40m"
-			"\x1b[1;44m╔═══════════════════════════════════════════════════════════════════════════╗\x1b[40m"
-			"\x1b[1;44m║ A    - Change BG color                                                    ║\x1b[40m"
-			"\x1b[1;44m║ B    - Toggle music                                                       ║\x1b[40m"
-			"\x1b[1;44m║ 1    - Send GBA Donut                                                     ║\x1b[40m"
-			"\x1b[1;44m║ HOME - Exit                                           Press 2 to go back. ║\x1b[40m"
-			"\x1b[1;44m╚═══════════════════════════════════════════════════════════════════════════╝\x1b[40m");
+			print("\e[23;0H"
+			"\e[104m╔═══════════════════════════════════════════════════════════════════════════╗\e[40m"
+			"\e[104m║ A    - Change BG color                                                    ║\e[40m"
+			"\e[104m║ B    - Toggle music                                                       ║\e[40m"
+			"\e[104m║ 1    - Send GBA Donut                                                     ║\e[40m"
+			"\e[104m║ HOME - Exit                                           Press 2 to go back. ║\e[40m"
+			"\e[104m╚═══════════════════════════════════════════════════════════════════════════╝\e[40m");
 		} else {
-			printf("\x1b[23;0H" "\x1b[40m"
-			"\x1b[1;44m╔═══════════════════════════════════════════════════════════════════════════╗\x1b[40m"
-			"\x1b[1;44m║ Korbo's Wii Donut Mod %s   %s ║\x1b[40m"
-			"\x1b[1;44m║ Based on the original donut.c by Andy Sloane <andy@a1k0n.net>             ║\x1b[40m"
-			"\x1b[1;44m║ Ported by emilydaemon <emilydaemon@donut.eu.org>, Modified by Korbo       ║\x1b[40m"
-			"\x1b[1;44m║ Default Music by Jogeir Liljedahl                 Press 2 for more info.  ║\x1b[40m"
-			"\x1b[1;44m╚═══════════════════════════════════════════════════════════════════════════╝\x1b[40m", VERSION, splash);
+			printf("\e[23;0H"
+			"\e[104m╔═══════════════════════════════════════════════════════════════════════════╗\e[40m"
+			"\e[104m║ \e[4mKorbo's Wii Donut Mod %s   %s\e[0m\e[104;37m ║\e[40m"
+			"\e[104m║ Based on the original donut.c by Andy Sloane <andy@a1k0n.net>             ║\e[40m"
+			"\e[104m║ Ported by emilydaemon <emilydaemon@donut.eu.org>, Modified by Korbo       ║\e[40m"
+			"\e[104m║ Default Music by Jogeir Liljedahl                  Press 2 for more info. ║\e[40m"
+			"\e[104m╚═══════════════════════════════════════════════════════════════════════════╝\e[40m", VERSION, splash);
 		}
-		print("\x1b[0;0H");
 		// printf("cwd: %s\n", getcwd(NULL, 0));
-		printf("\x1b[4%um%s", color, title);
+		printf("\e[0;0H" "\e[0m\e[4%um" "%s", color, title);
 		VIDEO_WaitVSync();
 	} while (true);
-	GRRMOD_End();
+	music_free();
 	return 0;
 }
