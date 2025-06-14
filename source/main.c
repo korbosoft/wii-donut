@@ -112,7 +112,7 @@ void send_donut(void) {
 
 	print("\e[40m" "\e[23;0H"
 	"\e[104m╔═══════════════════════════════════════════════════════════════════════════╗\e[40m"
-	"\e[104m║ GBA Donut ┌─┐ Connect your GBA to controller port       Press + to cancel ║\e[40m"
+	"\e[104m║ \e[4mGBA Donut\e[0m\e[104;37m ┌─┐ Connect your GBA to controller port       Press + to cancel ║\e[40m"
 	"\e[104m║           │Θ│ 2 with a GBA link cable.             ╒═──═╕                 ║\e[40m"
 	"\e[104m║           │2│                                      │+░░∞│                 ║\e[40m"
 	"\e[104m║           └─┘                                      └────┘      Waiting... ║\e[40m"
