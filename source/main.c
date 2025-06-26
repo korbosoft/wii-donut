@@ -180,7 +180,6 @@ int main() {
 
 	// Initialise the console, required for printf
 	console_init(xfb,20,20,rmode->fbWidth-20,rmode->xfbHeight-20,rmode->fbWidth*VI_DISPLAY_PIX_SZ);
-	//SYS_STDIO_Report(true);
 
 	// Set up the video registers with the chosen mode
 	VIDEO_Configure(rmode);
@@ -246,7 +245,7 @@ int main() {
 		} else {
 			printf("\e[23;0H" "\e[104m"
 			"╔═══════════════════════════════════════════════════════════════════════════╗"
-			"║ \e[4mKorbo's Wii Donut Mod %s   %s\e[0m\e[104;37m ║"
+			"║ \e[4mKorbo's Wii Donut Mod %s   %s\e[0m\e[104;37m "                      "║"
 			"║ Based on the original donut.c by Andy Sloane <andy@a1k0n.net>             ║"
 			"║ Ported by emilydaemon <emilydaemon@donut.eu.org>, Modified by Korbo       ║"
 			"║ Default Music by Jogeir Liljedahl                  Press 2 for more info. ║"

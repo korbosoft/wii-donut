@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <app version="1">
 	<name>Korbo's Wii Donut Mod</name>
-	<version>3.1.1</version>
-	<release_date>20250613000000</release_date>
+	<version>3.2.0</version>
+	<release_date>20250626000000</release_date>
 	<coder>korbosoft, jornmann, Andy Sloane</coder>
 	<short_description>Korbo's spinning donut for your Wii (and GBA)!</short_description>
 	<long_description>Wii Donut, a spinning donut for your Wii!
@@ -10,7 +10,7 @@ All the hard work was done by Andy Sloane (coding) and Jogeir Liljedahl (the swe
 
 GBA Donut requires a GBA link cable plugged in the 2nd controller port.
 
-Music can be changed by adding a "music.(mod/it/s3m/xm/etc)" file in the app directory.
+Music can be changed by adding a "music.(mod/it/s3m/xm/etc.)" file in the app directory.
 
 e-mail:
 emilydaemon: emilydaemon@donut.eu.org

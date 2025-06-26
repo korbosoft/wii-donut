@@ -8,7 +8,7 @@
 
 #include "music_mod.h"
 
-static bool paused = 0;
+static bool paused = false;
 static u8 *module;
 
 const char* const moduleTypes[18] = {
@@ -31,6 +31,18 @@ const char* const moduleTypes[18] = {
 	[16] = "uni",
 	[17] = "xm"
 };
+
+bool is_title_empty(const char *title) {
+	if (title[0] == '\0') return true;
+
+	const int length = strlen(title) - 1;
+	int i;
+	bool isAllSpaces = false;
+	for (i = 0; i < length; i++) {
+		isAllSpaces |= (title[i] == ' ');
+	}
+	return isAllSpaces;
+}
 
 void format_title(const char *input, char *output) {
 	int paddingNeeded;
@@ -84,9 +96,11 @@ void music_init(char *title_display) {
 	} else {
 		GRRMOD_Init(true); // music_mod is a mod file, (obviously) so no checks needed
 		GRRMOD_SetMOD(music_mod, music_mod_size);
+		strcat(tmp, "mod"); // built-in song should always have a title but whatever
 	}
 
-	format_title(GRRMOD_GetSongTitle(), title_display);
+	char *title = GRRMOD_GetSongTitle();
+	format_title(is_title_empty(title) ? tmp : title, title_display);
 
 	fclose(f);
 	GRRMOD_Start();
