@@ -68,7 +68,7 @@ void render_frame(float A, float B) {
 
 			// x and y projection.  note that y is negated here, because y
 			// goes up in 3D space but down on 2D displays.
-			const int xp = (int) (SCREEN_WIDTH / 2 + K1*ooz*x);
+			const int xp = (int) (SCREEN_WIDTH / 2 + K1*ooz*x*2); // multiplied by 2 to make wide again --Korbo
 			const int yp = (int) (SCREEN_HEIGHT / 2 - K1*ooz*y);
 
 			// calculate luminance.  ugly, but correct.
@@ -148,18 +148,18 @@ void send_donut(void) {
 	music_pause(!prev_paused);
 }
 
-const char* const splashMessages[SPLASH_COUNT] = {
-	[0] = "                        Also try DS Donut!",
-	[1] = "  Better than Wii Donut! [citation needed]",
+const char *const splashMessages[SPLASH_COUNT] = {
+	[0] = "Also try DS Donut!",
+	[1] = "Better than Wii Donut! [citation needed]",
 	[2] = "oh man please to help i am not good with c",
-	[3] = "            (\"Doughnut\" if you're british)",
-	[4] = "                           Korbo loves you",
+	[3] = "(\"Doughnut\" if you're british)",
+	[4] = "Korbo loves you <3",
 };
 
 //---------------------------------------------------------------------------------
 int main() {
-	bool showMore = false;
-	char splash[41], title[82];
+	bool showControls = false;
+	char splash[43], title[82];
 
 	//---------------------------------------------------------------------------------
 	// Initialise the video system
@@ -200,11 +200,16 @@ int main() {
 	VIDEO_WaitVSync();
 	if(rmode->viTVMode&VI_NON_INTERLACE) VIDEO_WaitVSync();
 
-	fatInitDefault();
+	file_init();
 
 	srand(time(NULL));
 
-	strcpy(splash, splashMessages[rand() % SPLASH_COUNT] ?: "FLAGRANT SPLASH ERROR");
+	if (rand() % 49) {
+		format_splash(splashMessages[rand() % SPLASH_COUNT] ?: "FLAGRANT SPLASH ERROR", splash);
+	} else {
+		format_splash("This splash has a 1/50 chance of appearing", splash);
+	}
+
 
 	print("\e[2;0H" "\e[37m" "\e[2J");
 
@@ -222,7 +227,7 @@ int main() {
 		} else if (pressed & WPAD_BUTTON_1) {
 			send_donut();
 		} else if (pressed & WPAD_BUTTON_2) {
-			showMore = !showMore;
+			showControls = !showControls;
 		} else if (pressed & WPAD_BUTTON_A) {
 			color++;
 			color %= 7;
@@ -234,10 +239,10 @@ int main() {
 		render_frame(A, B);
 		A += 0.07;
 		B += 0.02;
-		if (showMore) {
+		if (showControls) {
 			print("\e[23;0H" "\e[104m"
 			"╔═══════════════════════════════════════════════════════════════════════════╗"
-			"║ A    - Change BG color                                                    ║"
+			"║ A    - Change BG color                                           Controls ║"
 			"║ B    - Toggle music                                                       ║"
 			"║ 1    - Send GBA Donut                                                     ║"
 			"║ HOME - Exit                                           Press 2 to go back. ║"
@@ -248,11 +253,12 @@ int main() {
 			"║ \e[4mKorbo's Wii Donut Mod %s   %s\e[0m\e[104;37m "                      "║"
 			"║ Based on the original donut.c by Andy Sloane <andy@a1k0n.net>             ║"
 			"║ Ported by emilydaemon <emilydaemon@donut.eu.org>, Modified by Korbo       ║"
-			"║ Default Music by Jogeir Liljedahl                  Press 2 for more info. ║"
+			"║ Default Music by Jogeir Liljedahl                   Press 2 for controls. ║"
 			"╚═══════════════════════════════════════════════════════════════════════════╝\e[40m", VERSION, splash);
 		}
 		// printf("cwd: %s\n", getcwd(NULL, 0));
 		printf("\e[0;0H" "\e[0m\e[4%um" "%s", color, title);
+		printf("\e[0m\e[4%um", color);
 		VIDEO_WaitVSync();
 	} while (true);
 	music_free();

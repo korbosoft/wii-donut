@@ -11,7 +11,7 @@
 static bool paused = false;
 static u8 *module;
 
-const char* const moduleTypes[18] = {
+const char *const moduleTypes[18] = {
 	[0] = "669",
 	[1] = "amf",
 	[2] = "apun",
@@ -66,6 +66,7 @@ bool music_attempt(const char *type) {
 void music_init(char *title_display) {
 	char tmp[11] = "music.";
 	u8 i;
+	FILE *f;
 
 	for (i = 0; i < 18; i++) {
 		if (music_attempt(moduleTypes[i])) {
@@ -74,8 +75,7 @@ void music_init(char *title_display) {
 		}
 	}
 
-
-	FILE *f = fopen(tmp, "rb");
+	f = file_open(tmp, "rb");
 
 	if (f != NULL) {
 		if (strcmp(moduleTypes[i], "s3m") == 0) { // certain s3ms supposedly break GRRMOD in stereo
@@ -93,6 +93,7 @@ void music_init(char *title_display) {
 		fread(module, 1, module_size, f);
 
 		GRRMOD_SetMOD(module,module_size);
+		file_close(f);
 	} else {
 		GRRMOD_Init(true); // music_mod is a mod file, (obviously) so no checks needed
 		GRRMOD_SetMOD(music_mod, music_mod_size);
@@ -102,7 +103,6 @@ void music_init(char *title_display) {
 	char *title = GRRMOD_GetSongTitle();
 	format_title(is_title_empty(title) ? tmp : title, title_display);
 
-	fclose(f);
 	GRRMOD_Start();
 }
 

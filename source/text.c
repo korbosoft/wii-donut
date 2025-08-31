@@ -15,6 +15,15 @@ int calculate_padding(const char *input, size_t resultingLength) {
 	return paddingNeeded;
 }
 
+void format_splash(const char *input, char *output) {
+	int paddingNeeded;
+
+	paddingNeeded = calculate_padding(input, 42);
+	memset(output, ' ', paddingNeeded);
+	output[paddingNeeded] = '\0';
+	strcat(output, input);
+}
+
 int print(const char *str) {
 	return fwrite(str, strlen(str), 1, stdout);
 }

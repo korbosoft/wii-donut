@@ -3,6 +3,6 @@
 
 extern int calculate_padding(const char *input, size_t resultingLength);
 extern int print(const char *str);
-extern void alph_sort(const char* str[], int n);
+extern void format_splash(const char *input, char *output);
 
 #endif
