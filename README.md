@@ -1,5 +1,5 @@
-this will be my legacy in the homebrew scene. fate has decided it all
 # Korbo's Wii Donut Mod
+this will be my legacy in the homebrew scene. fate has decided it all
 ## (non-DevKitPro) Dependencies
 - [GBA Donut](https://github.com/korbosoft/gba-donut) (move ROM to data/demo.gba)
 - [GRRMOD](https://github.com/GRRLIB/GRRMOD)
