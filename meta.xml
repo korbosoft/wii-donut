@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <app version="1">
 	<name>Korbo's Wii Donut Mod</name>
-	<version>3.4.0</version>
+	<version>4.0.0</version>
 	<release_date>20250901000000</release_date>
 	<coder>Korbosoft, jornmann, Andy Sloane</coder>
 	<short_description>Korbo's spinning donut for your Wii (and GBA)!</short_description>

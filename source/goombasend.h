@@ -1,3 +1,6 @@
+#ifndef GOOMBASEND_H
+#define GOOMBASEND_H
+
 #include <gccore.h>
 // #include <stdio.h>
 #include <malloc.h>
@@ -6,9 +9,6 @@
 #include <stdlib.h>
 // #include <fat.h>
 // fat.h is not needed, as demo is hardcoded; the other three are probably remnants of goombasend
-
-#ifndef GOOMBASEND_H
-#define GOOMBASEND_H
 
 //from my tests 50us seems to be the lowest
 //safe si transfer delay in between calls
@@ -31,4 +31,5 @@ extern void send(u32);
 extern void prepare_rom();
 extern u8 wait_for_gba();
 extern u8 send_rom();
+
 #endif

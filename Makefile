@@ -20,7 +20,7 @@ BUILD		:=	build
 SOURCES		:=	source
 DATA		:=	data
 INCLUDES	:=
-VERSION 	:=	v3.4.0
+VERSION 	:=	v4.0.0
 
 #---------------------------------------------------------------------------------
 # options for code generation

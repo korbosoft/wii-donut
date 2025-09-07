@@ -1,11 +1,8 @@
-#include <gccore.h>
 #include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
 #include <wiiuse/wpad.h>
 
+#include "flavors.h"
 #include "file.h"
 #include "goombasend.h"
 #include "music.h"
@@ -24,25 +21,29 @@ volatile u32 transval = 0;
 volatile u32 resval = 0;
 
 static bool paused = true;
+static u8 bgColor = 0;
+static u8 flavor = 0;
 
-void render_frame(float A, float B) {
-	const float theta_spacing = 0.07;
-	const float phi_spacing = 0.02;
+const float theta_spacing = 0.07;
+const float phi_spacing = 0.02;
+
+void render_frame(float A, float B, Donut flavor) {
 
 	const int R1 = 1;
 	const int R2 = 2;
 	const int K2 = 5;
 
-	const float K1 = SCREEN_HEIGHT*K2*3/(8*(R1+R2));
+	const float K1 = SCREEN_HEIGHT * K2 * 3 / (8 * (R1+R2));
 	char output[SCREEN_WIDTH][SCREEN_HEIGHT];
-	float zbuffer[SCREEN_WIDTH][SCREEN_HEIGHT];
+	float zBuffer[SCREEN_WIDTH][SCREEN_HEIGHT];
+	bool underBuffer[SCREEN_WIDTH][SCREEN_HEIGHT];
 
 
 	// precompute sines and cosines of A and B
 	const float cosA = cos(A), sinA = sin(A);
 	const float cosB = cos(B), sinB = sin(B);
 	memset(output, ' ', sizeof(char) * SCREEN_SIZE);
-	memset(zbuffer, 0, sizeof(float) * SCREEN_SIZE);
+	memset(zBuffer, 0, sizeof(float) * SCREEN_SIZE);
 
 	// theta goes around the cross-sectional circle of a torus
 	for (float theta=0; theta < PI_TIMES_2; theta += theta_spacing) {
@@ -68,25 +69,26 @@ void render_frame(float A, float B) {
 
 			// x and y projection.  note that y is negated here, because y
 			// goes up in 3D space but down on 2D displays.
-			const int xp = (int) (SCREEN_WIDTH / 2 + K1*ooz*x*2); // multiplied by 2 to make wide again --Korbo
-			const int yp = (int) (SCREEN_HEIGHT / 2 - K1*ooz*y);
+			const int xp = (int) (SCREEN_WIDTH / 2 + K1 * ooz * x * 2); // multiplied by 2 to make wide again -- Korbo
+			const int yp = (int) (SCREEN_HEIGHT / 2 - K1 * ooz * y);
 
 			// calculate luminance.  ugly, but correct.
 			const float L = cosphi * costheta * sinB - cosA * costheta * sinphi - sinA * sintheta + cosB * (cosA * sintheta - costheta * sinA * sinphi);
 			// L ranges from -sqrt(2) to +sqrt(2).  If it's < 0, the surface
 			// is pointing away from us, so we won't bother trying to plot it.
-			if (L > 0) {
+			if (flavor.flags.inverted ? L <= 0 : L > 0) { // fuck you i'm plotting it anyways -- Korbo
 				// test against the z-buffer.  larger 1/z means the pixel is
 				// closer to the viewer than what's already plotted.
 				// printf("xp: %d, yp: %d\n", xp, yp);
 
-				if (ooz > zbuffer[xp][yp]) {
-					zbuffer[xp][yp] = ooz;
-					const int luminance_index = L * 8;
+				if (ooz > zBuffer[xp][yp]) {
+					zBuffer[xp][yp] = ooz;
+					const int luminance_index = L * (11 / sqrt(2));
+					underBuffer[xp][yp] = (theta >= M_PI);
 					// luminance_index is now in the range 0..11 (8*sqrt(2) = 11.3)
 					// now we lookup the character corresponding to the
 					// luminance and plot it in our output:
-					output[xp][yp] = ".,-~:;=!*#$@"[luminance_index];
+					output[xp][yp] = ".,-~:;=!*#$@"[flavor.flags.inverted ? luminance_index + 11 : luminance_index];
 				}
 			}
 		}
@@ -97,10 +99,26 @@ void render_frame(float A, float B) {
 	print("\e[2;0H");
 	for (int j = 0; j < SCREEN_HEIGHT; j++) {
 		for (int i = 0; i < SCREEN_WIDTH; i++) {
+			if (flavor.flags.radiates & (output[i][j] != ' ')) {
+				if (rand() % 3) {
+					float mult = rand_float();
+					rgb_escape(
+						rand() % 256 * mult,
+						rand() % 192 * mult,
+						rand() % 256 * mult, false
+					);
+				}
+			}
+			if (underBuffer[i][j]) {
+				rgb_escape(flavor.bottom.r, flavor.bottom.g, flavor.bottom.b, true);
+			} else {
+				rgb_escape(flavor.top.r, flavor.top.g, flavor.top.b, true);
+			}
 			putchar(output[i][j]);
+			printf("\e[0m\e[4%um", bgColor);
 		}
 		putchar('\n');
-		printf("\e[%u;0H", j+2);
+		printf("\e[%u;0H", j + 2);
 
 	}
 
@@ -218,34 +236,35 @@ int main() {
 	prepare_rom();
 
 	float A = 1, B = 1;
-	u8 color = 0;
+	u32 pressed;
 	do {
 		WPAD_ScanPads();
-		u32 pressed = WPAD_ButtonsDown(0);
-		if (pressed & WPAD_BUTTON_HOME) {
-			break;
-		} else if (pressed & WPAD_BUTTON_1) {
+		pressed = WPAD_ButtonsDown(0);
+		if (pressed & WPAD_BUTTON_1) {
 			send_donut();
 		} else if (pressed & WPAD_BUTTON_2) {
 			showControls = !showControls;
+		} else if (pressed & WPAD_BUTTON_MINUS) {
+			bgColor++;
+			bgColor %= 7;
+		} else if (pressed & WPAD_BUTTON_PLUS) {
+			flavor++;
+			flavor %= FLAVORS;
 		} else if (pressed & WPAD_BUTTON_A) {
-			color++;
-			color %= 7;
-		} else if (pressed & WPAD_BUTTON_B) {
 			music_pause(paused);
 			paused = !paused;
 		}
-		printf("\e[0m" "\e[4%um", color);
-		render_frame(A, B);
-		A += 0.07;
-		B += 0.02;
+		printf("\e[0m" "\e[4%um", bgColor);
+		render_frame(A, B, flavors[flavor]);
+		A = fmod(A + theta_spacing, PI_TIMES_2);
+		B = fmod(B + phi_spacing, PI_TIMES_2);
 		if (showControls) {
 			print("\e[23;0H" "\e[104m"
 			"╔═══════════════════════════════════════════════════════════════════════════╗"
-			"║ A    - Change BG color                                           Controls ║"
-			"║ B    - Toggle music                                                       ║"
-			"║ 1    - Send GBA Donut                                                     ║"
-			"║ HOME - Exit                                           Press 2 to go back. ║"
+			"║ -    - Change BG color ║ + - Change donut flavor    ║            Controls ║"
+			"║ A    - Toggle music    ║                            ║                     ║"
+			"║ 1    - Send GBA Donut  ║                            ║                     ║"
+			"║ HOME - Exit            ║                            ║ Press 2 to go back. ║"
 			"╚═══════════════════════════════════════════════════════════════════════════╝\e[40m");
 		} else {
 			printf("\e[23;0H" "\e[104m"
@@ -257,10 +276,10 @@ int main() {
 			"╚═══════════════════════════════════════════════════════════════════════════╝\e[40m", VERSION, splash);
 		}
 		// printf("cwd: %s\n", getcwd(NULL, 0));
-		printf("\e[0;0H" "\e[0m\e[4%um" "%s", color, title);
-		printf("\e[0m\e[4%um", color);
+		printf("\e[0;0H" "\e[0m\e[4%um" "%s", bgColor, title);
+		printf("\e[0m\e[4%um", bgColor);
 		VIDEO_WaitVSync();
-	} while (true);
+	} while (!(pressed & WPAD_BUTTON_HOME));
 	music_free();
 	return 0;
 }
