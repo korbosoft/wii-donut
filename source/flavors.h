@@ -29,7 +29,7 @@ float rand_float() { return (float)rand() / (float)RAND_MAX; }
 
 const Donut flavors[FLAVORS] = {
 	{
-		"Classic",
+		"Powdered",
 		{255, 255, 255},
 		{255, 255, 255},
 		{false, false, false}
