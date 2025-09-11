@@ -12,6 +12,32 @@ int calculate_padding(const char *input, size_t resultingLength) {
 	return paddingNeeded;
 }
 
+void format_title(const char *input, char *output) {
+	int paddingNeeded;
+	char prefix[82];
+
+	strcpy(prefix, "\e[4mSong: ");
+
+	paddingNeeded = calculate_padding(input, 71);
+	memset(output, ' ', paddingNeeded);
+	output[paddingNeeded] = '\0';
+	strcat(prefix, input);
+	strcat(output, prefix);
+}
+
+void format_name(const char *input, char *output) {
+	int paddingNeeded;
+	char prefix[82];
+
+	strcpy(prefix, "\e[4mFlavor: ");
+
+	paddingNeeded = calculate_padding(input, 69);
+	memset(output, ' ', paddingNeeded);
+	output[paddingNeeded] = '\0';
+	strcat(prefix, input);
+	strcat(output, prefix);
+}
+
 void format_splash(const char *input, char *output) {
 	int paddingNeeded;
 

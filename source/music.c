@@ -44,19 +44,6 @@ bool is_title_empty(const char *title) {
 	return isAllSpaces;
 }
 
-void format_title(const char *input, char *output) {
-	int paddingNeeded;
-	char prefix[82];
-
-	strcpy(prefix, "\e[4mSong: ");
-
-	paddingNeeded = calculate_padding(input, 71);
-	memset(output, ' ', paddingNeeded);
-	output[paddingNeeded] = '\0';
-	strcat(prefix, input);
-	strcat(output, prefix);
-}
-
 bool music_attempt(const char *type) {
 	char tmp[11] = "music.";
 	strcat(tmp, type);

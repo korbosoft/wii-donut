@@ -3,3 +3,7 @@ build/*
 *.dol
 *.kate-swp
 *.zip
+# libs/*/pkg
+# libs/*/src
+# libs/*/*.tar.gz
+# libs/*/*.tar.zst

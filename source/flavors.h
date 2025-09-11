@@ -4,7 +4,7 @@
 #include <gccore.h>
 #include <stdlib.h>
 
-#define FLAVORS 6
+#define FLAVORS 13
 
 typedef struct {
 	u8 r;
@@ -49,6 +49,48 @@ const Donut flavors[FLAVORS] = {
 	{
 		"Purple",
 		{138, 110, 210},
+		{206, 137, 55},
+		{false, false, false}
+	},
+	{
+		"Lemon",
+		{242, 255, 122},
+		{206, 137, 55},
+		{false, false, false}
+	},
+	{
+		"Strawberry",
+		{255, 113, 107},
+		{206, 137, 55},
+		{false, false, false}
+	},
+	{
+		"Pumpkin",
+		{255, 190, 99},
+		{206, 137, 55},
+		{false, false, false}
+	},
+	{
+		"Key Lime",
+		{189, 255, 130},
+		{206, 137, 55},
+		{false, false, false}
+	},
+	{
+		"Blueberry",
+		{105, 110, 255},
+		{206, 137, 55},
+		{false, false, false}
+	},
+	{
+		"Glazed",
+		{232, 188, 135},
+		{232, 188, 135},
+		{false, false, false}
+	},
+	{
+		"Bagel",
+		{206, 137, 55},
 		{206, 137, 55},
 		{false, false, false}
 	},

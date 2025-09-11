@@ -2,8 +2,9 @@
 #include <unistd.h>
 #include <wiiuse/wpad.h>
 
-#include "flavors.h"
 #include "file.h"
+#include "flavors.h"
+#include "font.h"
 #include "goombasend.h"
 #include "music.h"
 #include "text.h"
@@ -29,9 +30,7 @@ const float phi_spacing = 0.02;
 
 void render_frame(float A, float B, Donut flavor) {
 
-	const int R1 = 1;
-	const int R2 = 2;
-	const int K2 = 5;
+	const u8 R1 = 1, R2 = 2, K2 = 5;
 
 	const float K1 = SCREEN_HEIGHT * K2 * 3 / (8 * (R1+R2));
 	char output[SCREEN_WIDTH][SCREEN_HEIGHT];
@@ -69,8 +68,8 @@ void render_frame(float A, float B, Donut flavor) {
 
 			// x and y projection.  note that y is negated here, because y
 			// goes up in 3D space but down on 2D displays.
-			const int xp = (int) (SCREEN_WIDTH / 2 + K1 * ooz * x * 2); // multiplied by 2 to make wide again -- Korbo
-			const int yp = (int) (SCREEN_HEIGHT / 2 - K1 * ooz * y);
+			const u8 xp = (u8) (SCREEN_WIDTH / 2 + K1 * ooz * x * 2); // multiplied by 2 to make wide again -- Korbo
+			const u8 yp = (u8) (SCREEN_HEIGHT / 2 - K1 * ooz * y);
 
 			// calculate luminance.  ugly, but correct.
 			const float L = cosphi * costheta * sinB - cosA * costheta * sinphi - sinA * sintheta + cosB * (cosA * sintheta - costheta * sinA * sinphi);
@@ -84,7 +83,7 @@ void render_frame(float A, float B, Donut flavor) {
 				if (ooz > zBuffer[xp][yp]) {
 					zBuffer[xp][yp] = ooz;
 					const int luminance_index = L * (11 / sqrt(2));
-					underBuffer[xp][yp] = (theta >= M_PI);
+					underBuffer[xp][yp] = (theta < M_PI);
 					// luminance_index is now in the range 0..11 (8*sqrt(2) = 11.3)
 					// now we lookup the character corresponding to the
 					// luminance and plot it in our output:
@@ -130,15 +129,18 @@ void send_donut(void) {
 
 	print("\e[0m\e[40;37m" "\e[23;0H" "\e[104m"
 	"╔═══════════════════════════════════════════════════════════════════════════╗"
-	"║ \e[4mGBA Donut\e[0m\e[104;37m ┌─┐ Connect your GBA to controller port       Press + to cancel ║"
+	"║ \e[4mGBA Donut\e[0m\e[104;37m ┌─┐ Connect your GBA to controller port     Press +/Y to cancel ║"
 	"║           │Θ│ 2 with a GBA link cable.             ╒═──═╕                 ║"
 	"║           │2│                                      │+░░∞│                 ║"
 	"║           └─┘                                      └────┘      Waiting... ║"
 	"╚═══════════════════════════════════════════════════════════════════════════╝\e[40m");
 
 	while (wait_for_gba()) {
+		PAD_ScanPads();
 		WPAD_ScanPads();
-		if (WPAD_ButtonsDown(0) & WPAD_BUTTON_PLUS) {
+		u32 wiiPressed = WPAD_ButtonsDown(0);
+		u16 gcPressed = PAD_ButtonsDown(0);
+		if ((wiiPressed & WPAD_BUTTON_PLUS) | (gcPressed & PAD_BUTTON_Y)) {
 			music_pause(!prev_paused);
 			return;
 		}
@@ -177,13 +179,16 @@ const char *const splashMessages[SPLASH_COUNT] = {
 //---------------------------------------------------------------------------------
 int main() {
 	bool showControls = false;
-	char splash[43], title[82];
+	char splash[43], title[82], name[82];
 
 	//---------------------------------------------------------------------------------
 	// Initialise the video system
 	VIDEO_Init();
 
-	// This function initialises the attached controllers
+	// This function initialises the attached gamecube controllers
+	PAD_Init();
+
+	// This function initialises the attached wii controllers
 	WPAD_Init();
 
 	// Initialise the audio subsystem
@@ -197,7 +202,7 @@ int main() {
 	xfb = MEM_K0_TO_K1(SYS_AllocateFramebuffer(rmode));
 
 	// Initialise the console, required for printf
-	console_init(xfb,20,20,rmode->fbWidth-20,rmode->xfbHeight-20,rmode->fbWidth*VI_DISPLAY_PIX_SZ);
+	CON_Init(xfb,20,20,rmode->fbWidth-20,rmode->xfbHeight-20,rmode->fbWidth*VI_DISPLAY_PIX_SZ);
 
 	// Set up the video registers with the chosen mode
 	VIDEO_Configure(rmode);
@@ -207,6 +212,9 @@ int main() {
 
 	// Clear the framebuffer
 	VIDEO_ClearFrameBuffer(rmode, xfb, COLOR_BLACK);
+
+	// Set custom font
+	consoleSetFont(NULL, &(ConsoleFont){(u8*)donut_font_8x16, 0, 256});
 
 	// Make the display visible
 	VIDEO_SetBlack(false);
@@ -236,21 +244,25 @@ int main() {
 	prepare_rom();
 
 	float A = 1, B = 1;
-	u32 pressed;
+	u32 wiiPressed;
+	u16 gcPressed, showName = 0;
 	do {
+		PAD_ScanPads();
 		WPAD_ScanPads();
-		pressed = WPAD_ButtonsDown(0);
-		if (pressed & WPAD_BUTTON_1) {
+		wiiPressed = WPAD_ButtonsDown(0);
+		gcPressed = PAD_ButtonsDown(0);
+		if ((wiiPressed & WPAD_BUTTON_1) | (gcPressed & PAD_TRIGGER_Z)) {
 			send_donut();
-		} else if (pressed & WPAD_BUTTON_2) {
+		} else if ((wiiPressed & WPAD_BUTTON_2) | (gcPressed & PAD_BUTTON_B)) {
 			showControls = !showControls;
-		} else if (pressed & WPAD_BUTTON_MINUS) {
+		} else if ((wiiPressed & WPAD_BUTTON_MINUS) | (gcPressed & PAD_BUTTON_X)) {
 			bgColor++;
 			bgColor %= 7;
-		} else if (pressed & WPAD_BUTTON_PLUS) {
+		} else if ((wiiPressed & WPAD_BUTTON_PLUS) | (gcPressed & PAD_BUTTON_Y)) {
 			flavor++;
 			flavor %= FLAVORS;
-		} else if (pressed & WPAD_BUTTON_A) {
+			showName = 50;
+		} else if ((wiiPressed & WPAD_BUTTON_A) | (gcPressed & PAD_BUTTON_A)) {
 			music_pause(paused);
 			paused = !paused;
 		}
@@ -258,28 +270,31 @@ int main() {
 		render_frame(A, B, flavors[flavor]);
 		A = fmod(A + theta_spacing, PI_TIMES_2);
 		B = fmod(B + phi_spacing, PI_TIMES_2);
+		format_name(flavors[flavor].name, name);
 		if (showControls) {
 			print("\e[23;0H" "\e[104m"
-			"╔═══════════════════════════════════════════════════════════════════════════╗"
-			"║ -    - Change BG color ║ + - Change donut flavor    ║            Controls ║"
-			"║ A    - Toggle music    ║                            ║                     ║"
-			"║ 1    - Send GBA Donut  ║                            ║                     ║"
-			"║ HOME - Exit            ║                            ║ Press 2 to go back. ║"
-			"╚═══════════════════════════════════════════════════════════════════════════╝\e[40m");
+			"╔════════════════════════════╦══════════════════════╦═══════════════════════╗"
+			"║ -/X      - Change BG color ║ +/Y - Change flavor  ║              Controls ║"
+			"║ A        - Toggle music    ║                      ║                       ║"
+			"║ 1/Z      - Send GBA Donut  ║                      ║                       ║"
+			"║ \xfe\xff/START - Exit            ║                      ║ Press 2/B to go back. ║"
+			"╚════════════════════════════╩══════════════════════╩═══════════════════════╝\e[40m");
 		} else {
 			printf("\e[23;0H" "\e[104m"
 			"╔═══════════════════════════════════════════════════════════════════════════╗"
 			"║ \e[4mKorbo's Wii Donut Mod %s   %s\e[0m\e[104;37m "                      "║"
 			"║ Based on the original donut.c by Andy Sloane <andy@a1k0n.net>             ║"
 			"║ Ported by emilydaemon <emilydaemon@donut.eu.org>, Modified by Korbo       ║"
-			"║ Default Music by Jogeir Liljedahl                   Press 2 for controls. ║"
+			"║ Default Music by Jogeir Liljedahl                 Press 2/B for controls. ║"
 			"╚═══════════════════════════════════════════════════════════════════════════╝\e[40m", VERSION, splash);
-		}
 		// printf("cwd: %s\n", getcwd(NULL, 0));
-		printf("\e[0;0H" "\e[0m\e[4%um" "%s", bgColor, title);
+		}
+		printf("\e[0;0H" "\e[0m\e[4%um" "%s", bgColor, (showName != 0) ? name : title);
+		if (showName)
+			showName--;
 		printf("\e[0m\e[4%um", bgColor);
 		VIDEO_WaitVSync();
-	} while (!(pressed & WPAD_BUTTON_HOME));
+	} while (!(wiiPressed & WPAD_BUTTON_HOME) & !(gcPressed & PAD_BUTTON_START));
 	music_free();
 	return 0;
 }
