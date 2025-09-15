@@ -2,15 +2,9 @@
 #define FLAVORS_H
 
 #include <gccore.h>
-#include <stdlib.h>
+#include "color.h"
 
-#define FLAVORS 13
-
-typedef struct {
-	u8 r;
-	u8 g;
-	u8 b;
-} RGB;
+#define FLAVORS 15
 
 typedef struct {
 	bool lolcat : 1;
@@ -24,8 +18,6 @@ typedef struct {
 	RGB bottom;
 	_Flags flags;
 } Donut;
-
-float rand_float() { return (float)rand() / (float)RAND_MAX; }
 
 const Donut flavors[FLAVORS] = {
 	{
@@ -83,6 +75,12 @@ const Donut flavors[FLAVORS] = {
 		{false, false, false}
 	},
 	{
+		"Caramel",
+		{203, 111, 57},
+		{206, 137, 55},
+		{false, false, false}
+	},
+	{
 		"Glazed",
 		{232, 188, 135},
 		{232, 188, 135},
@@ -106,6 +104,12 @@ const Donut flavors[FLAVORS] = {
 		{255, 224, 255},
 		{false, false, true}
 	},
+	{
+		"Rainbow",
+		{255, 0, 255},
+		{255, 0, 255},
+		{true, false, false}
+	}
 };
 
 #endif

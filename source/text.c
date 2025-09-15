@@ -50,10 +50,3 @@ void format_splash(const char *input, char *output) {
 int print(const char *str) {
 	return fwrite(str, strlen(str), 1, stdout);
 }
-
-int rgb_escape(const u8 r, const u8 g, const u8 b, const bool fg) {
-	if ((r > 255) || (g > 255) || (b > 255))
-		return -1;
-	printf("\e[%i;2;%i;%i;%im", fg ? 38 : 48, r, g, b);
-	return 0;
-}

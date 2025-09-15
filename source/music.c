@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <ogc/conf.h>
 #include <string.h>
 
 #include "music.h"
@@ -8,10 +9,12 @@
 
 #include "music_mod.h"
 
+#define FILETYPE_COUNT 18
+
 static bool paused = false;
 static u8 *module;
 
-const char *const moduleTypes[18] = {
+const char *moduleTypes[FILETYPE_COUNT] = {
 	[0] = "669",
 	[1] = "amf",
 	[2] = "apun",
@@ -29,7 +32,7 @@ const char *const moduleTypes[18] = {
 	[14] = "stx",
 	[15] = "ult",
 	[16] = "uni",
-	[17] = "xm"
+	[17] = "xm",
 };
 
 bool is_title_empty(const char *title) {
@@ -55,7 +58,7 @@ void music_init(char *title_display) {
 	u8 i;
 	FILE *f;
 
-	for (i = 0; i < 18; i++) {
+	for (i = 0; i < FILETYPE_COUNT; i++) {
 		if (music_attempt(moduleTypes[i])) {
 			strcat(tmp, moduleTypes[i]);
 			break;
@@ -64,12 +67,9 @@ void music_init(char *title_display) {
 
 	f = file_open(tmp, "rb");
 
-	if (f != NULL) {
-		if (strcmp(moduleTypes[i], "s3m") == 0) { // certain s3ms supposedly break GRRMOD in stereo
-			GRRMOD_Init(false);
-		} else {
-			GRRMOD_Init(true);
-		}
+	GRRMOD_Init(CONF_GetSoundMode()); // check for mono
+
+	if (f) {
 
 		fseek(f, 0, SEEK_END);
 		long module_size = ftell(f);
@@ -82,7 +82,6 @@ void music_init(char *title_display) {
 		GRRMOD_SetMOD(module,module_size);
 		file_close(f);
 	} else {
-		GRRMOD_Init(true); // music_mod is a mod file, (obviously) so no checks needed
 		GRRMOD_SetMOD(music_mod, music_mod_size);
 		strcat(tmp, "mod"); // built-in song should always have a title but whatever
 	}
@@ -94,7 +93,8 @@ void music_init(char *title_display) {
 }
 
 void music_free(void) {
-	free(module);
+	if (module)
+		free(module);
 	GRRMOD_End();
 }
 

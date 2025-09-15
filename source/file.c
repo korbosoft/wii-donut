@@ -22,7 +22,7 @@ int file_close(FILE *stream) {
 
 bool file_exists(const char *filename) {
 	FILE *f = file_open(filename, "rb");
-	if (f != NULL) {
+	if (f) {
 		file_close(f);
 		return true;
 	}

@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <wiiuse/wpad.h>
 
+#include "color.h"
 #include "file.h"
 #include "flavors.h"
 #include "font.h"
@@ -29,7 +30,7 @@ const float theta_spacing = 0.07;
 const float phi_spacing = 0.02;
 
 void render_frame(float A, float B, Donut flavor) {
-
+	float hue = 0;
 	const u8 R1 = 1, R2 = 2, K2 = 5;
 
 	const float K1 = SCREEN_HEIGHT * K2 * 3 / (8 * (R1+R2));
@@ -82,7 +83,7 @@ void render_frame(float A, float B, Donut flavor) {
 
 				if (ooz > zBuffer[xp][yp]) {
 					zBuffer[xp][yp] = ooz;
-					const int luminance_index = L * (11 / sqrt(2));
+					const s8 luminance_index = L * (11 / sqrt(2));
 					underBuffer[xp][yp] = (theta < M_PI);
 					// luminance_index is now in the range 0..11 (8*sqrt(2) = 11.3)
 					// now we lookup the character corresponding to the
@@ -100,18 +101,22 @@ void render_frame(float A, float B, Donut flavor) {
 		for (int i = 0; i < SCREEN_WIDTH; i++) {
 			if (flavor.flags.radiates & (output[i][j] != ' ')) {
 				if (rand() % 3) {
-					float mult = rand_float();
-					rgb_escape(
-						rand() % 256 * mult,
-						rand() % 192 * mult,
-						rand() % 256 * mult, false
+					RGB radiatedBg = generate_rad_noise(bgColor);
+					RGB_escape(
+						radiatedBg.r,
+						radiatedBg.g,
+						radiatedBg.b, false
 					);
 				}
 			}
-			if (underBuffer[i][j]) {
-				rgb_escape(flavor.bottom.r, flavor.bottom.g, flavor.bottom.b, true);
+			if (flavor.flags.lolcat & (output[i][j] != ' ')) {
+				RGB rainbow = HSV_to_RGB(hue, 1, 1);
+				hue = fmod(hue + 1, 360);
+				RGB_escape(rainbow.r, rainbow.g, rainbow.b, true);
+			} else if (underBuffer[i][j]) {
+				RGB_escape(flavor.bottom.r, flavor.bottom.g, flavor.bottom.b, true);
 			} else {
-				rgb_escape(flavor.top.r, flavor.top.g, flavor.top.b, true);
+				RGB_escape(flavor.top.r, flavor.top.g, flavor.top.b, true);
 			}
 			putchar(output[i][j]);
 			printf("\e[0m\e[4%um", bgColor);
@@ -168,7 +173,7 @@ void send_donut(void) {
 	music_pause(!prev_paused);
 }
 
-const char *const splashMessages[SPLASH_COUNT] = {
+const char *splashMessages[SPLASH_COUNT] = {
 	[0] = "Also try DS Donut!",
 	[1] = "Better than Wii Donut! [citation needed]",
 	[2] = "oh man please to help i am not good with c",
@@ -180,7 +185,6 @@ const char *const splashMessages[SPLASH_COUNT] = {
 int main() {
 	bool showControls = false;
 	char splash[43], title[82], name[82];
-
 	//---------------------------------------------------------------------------------
 	// Initialise the video system
 	VIDEO_Init();
@@ -245,7 +249,8 @@ int main() {
 
 	float A = 1, B = 1;
 	u32 wiiPressed;
-	u16 gcPressed, showName = 0;
+	u16 gcPressed;
+	u8 showName = 0;
 	do {
 		PAD_ScanPads();
 		WPAD_ScanPads();
