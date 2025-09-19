@@ -111,7 +111,7 @@ run:
 	wiiload boot.dol
 
 #---------------------------------------------------------------------------------
-package:
+release:
 	mkdir -p korbodonut
 	cp boot.dol meta.xml icon.png ./korbodonut/
 	cp build/boot.elf.map donut.map
