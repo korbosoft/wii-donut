@@ -20,7 +20,7 @@ BUILD		:=	build
 SOURCES		:=	source
 DATA		:=	data
 INCLUDES	:=
-VERSION 	:=	v4.0.0
+VERSION 	:=	v4.1.1
 
 #---------------------------------------------------------------------------------
 # options for code generation
@@ -111,11 +111,14 @@ run:
 	wiiload boot.dol
 
 #---------------------------------------------------------------------------------
-release:
+package:
 	mkdir -p korbodonut
 	cp boot.dol meta.xml icon.png ./korbodonut/
+	cp build/boot.elf.map donut.map
 	zip -rv donut ./korbodonut/
 	rm -rf ./korbodonut/
+	gh release create $(VERSION) donut.zip donut.map
+	rm -f donut.map donut.zip
 
 #---------------------------------------------------------------------------------
 else

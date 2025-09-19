@@ -76,7 +76,7 @@ void render_frame(float A, float B, Donut flavor) {
 			const float L = cosphi * costheta * sinB - cosA * costheta * sinphi - sinA * sintheta + cosB * (cosA * sintheta - costheta * sinA * sinphi);
 			// L ranges from -sqrt(2) to +sqrt(2).  If it's < 0, the surface
 			// is pointing away from us, so we won't bother trying to plot it.
-			if (flavor.flags.inverted ? L <= 0 : L > 0) { // fuck you i'm plotting it anyways -- Korbo
+			if (flavor.flags.ghost ? L <= 0 : L > 0) { // fuck you i'm plotting it anyways -- Korbo
 				// test against the z-buffer.  larger 1/z means the pixel is
 				// closer to the viewer than what's already plotted.
 				// printf("xp: %d, yp: %d\n", xp, yp);
@@ -88,7 +88,7 @@ void render_frame(float A, float B, Donut flavor) {
 					// luminance_index is now in the range 0..11 (8*sqrt(2) = 11.3)
 					// now we lookup the character corresponding to the
 					// luminance and plot it in our output:
-					output[xp][yp] = ".,-~:;=!*#$@"[flavor.flags.inverted ? luminance_index + 11 : luminance_index];
+					output[xp][yp] = ".,-~:;=!*#$@"[flavor.flags.ghost ? luminance_index + 11 : luminance_index];
 				}
 			}
 		}

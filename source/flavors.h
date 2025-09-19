@@ -4,11 +4,11 @@
 #include <gccore.h>
 #include "color.h"
 
-#define FLAVORS 15
+#define FLAVORS 16
 
 typedef struct {
 	bool lolcat : 1;
-	bool inverted : 1;
+	bool ghost : 1;
 	bool radiates : 1;
 } _Flags;
 
@@ -77,6 +77,12 @@ const Donut flavors[FLAVORS] = {
 	{
 		"Caramel",
 		{203, 111, 57},
+		{206, 137, 55},
+		{false, false, false}
+	},
+	{
+		"Pistachio",
+		{156, 255, 110},
 		{206, 137, 55},
 		{false, false, false}
 	},

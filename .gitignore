@@ -1,6 +1,7 @@
 build/*
 *.elf
 *.dol
+*.map
 *.kate-swp
 *.zip
 # libs/*/pkg
