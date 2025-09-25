@@ -1,22 +1,19 @@
 #ifndef FLAVORS_H
 #define FLAVORS_H
 
-#include <gccore.h>
 #include "color.h"
 
 #define FLAVORS 17
 
 typedef struct {
-	bool lolcat : 1;
-	bool ghost : 1;
-	bool radiates : 1;
-} _Flags;
-
-typedef struct {
 	char name[17];
 	RGB top;
 	RGB bottom;
-	_Flags flags;
+	struct _flags {
+		bool lolcat : 1;
+		bool ghost : 1;
+		bool radiates : 1;
+	} flags;
 } Donut;
 
 const Donut flavors[FLAVORS] = {

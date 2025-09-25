@@ -1,6 +1,9 @@
 #include "text.h"
 
-int calculate_padding(const char *input, size_t resultingLength) {
+#include <stdio.h>
+#include <string.h>
+
+static int calculate_padding(const char *input, size_t resultingLength) {
 	const size_t strLength = strlen(input);
 	int paddingNeeded;
 

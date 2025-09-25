@@ -1,12 +1,11 @@
 #include <math.h>
 #include <unistd.h>
-#include <wiiuse/wpad.h>
-
 #include "color.h"
 #include "file.h"
 #include "flavors.h"
 #include "font.h"
 #include "goombasend.h"
+#include "input.h"
 #include "music.h"
 #include "text.h"
 
@@ -26,10 +25,10 @@ static bool paused = true;
 static u8 bgColor = 0;
 static u8 flavor = 0;
 
-const float theta_spacing = 0.07;
-const float phi_spacing = 0.02;
+static const float theta_spacing = 0.07;
+static const float phi_spacing = 0.02;
 
-void render_frame(float A, float B, Donut flavor) {
+static void render_frame(float A, float B, Donut flavor) {
 	float hue = 0;
 	const u8 R1 = 1, R2 = 2, K2 = 5;
 
@@ -128,7 +127,7 @@ void render_frame(float A, float B, Donut flavor) {
 
 }
 
-void send_donut(void) {
+static void send_donut(void) {
 	bool prev_paused = paused;
 	music_pause(true);
 
@@ -141,11 +140,9 @@ void send_donut(void) {
 	"╚═══════════════════════════════════════════════════════════════════════════╝\e[40m");
 
 	while (wait_for_gba()) {
-		PAD_ScanPads();
-		WPAD_ScanPads();
-		u32 wiiPressed = WPAD_ButtonsDown(0);
-		u16 gcPressed = PAD_ButtonsDown(0);
-		if ((wiiPressed & WPAD_BUTTON_PLUS) | (gcPressed & PAD_BUTTON_Y)) {
+		input_scan();
+		input_down(0, 0);
+		if ((wiiPressed & WPAD_BUTTON_PLUS) | (GCPressed & PAD_BUTTON_Y)) {
 			music_pause(!prev_paused);
 			return;
 		}
@@ -173,7 +170,7 @@ void send_donut(void) {
 	music_pause(!prev_paused);
 }
 
-const char *splashMessages[SPLASH_COUNT] = {
+static const char *splashMessages[SPLASH_COUNT] = {
 	[0] = "Also try DS Donut!",
 	[1] = "Better than Wii Donut! [citation needed]",
 	[2] = "oh man please to help i am not good with c",
@@ -189,11 +186,8 @@ int main() {
 	// Initialise the video system
 	VIDEO_Init();
 
-	// This function initialises the attached gamecube controllers
-	PAD_Init();
-
-	// This function initialises the attached wii controllers
-	WPAD_Init();
+	// Initialize all controller input functions
+	input_init();
 
 	// Initialise the audio subsystem
 	AESND_Init();
@@ -240,7 +234,6 @@ int main() {
 		format_splash("This splash has a 1/50 chance of appearing", splash);
 	}
 
-
 	print("\e[2;0H" "\e[37m" "\e[2J");
 
 	music_init(title);
@@ -248,26 +241,22 @@ int main() {
 	prepare_rom();
 
 	float A = 1, B = 1;
-	u32 wiiPressed;
-	u16 gcPressed;
 	u8 showName = 0;
 	do {
-		PAD_ScanPads();
-		WPAD_ScanPads();
-		wiiPressed = WPAD_ButtonsDown(0);
-		gcPressed = PAD_ButtonsDown(0);
-		if ((wiiPressed & WPAD_BUTTON_1) | (gcPressed & PAD_TRIGGER_Z)) {
+		input_scan();
+		input_down(0, 0);
+		if ((wiiPressed & WPAD_BUTTON_1) | (GCPressed & PAD_TRIGGER_Z)) {
 			send_donut();
-		} else if ((wiiPressed & WPAD_BUTTON_2) | (gcPressed & PAD_BUTTON_B)) {
+		} else if ((wiiPressed & WPAD_BUTTON_2) | (GCPressed & PAD_BUTTON_B)) {
 			showControls = !showControls;
-		} else if ((wiiPressed & WPAD_BUTTON_MINUS) | (gcPressed & PAD_BUTTON_X)) {
+		} else if ((wiiPressed & WPAD_BUTTON_MINUS) | (GCPressed & PAD_BUTTON_X)) {
 			bgColor++;
 			bgColor %= 7;
-		} else if ((wiiPressed & WPAD_BUTTON_PLUS) | (gcPressed & PAD_BUTTON_Y)) {
+		} else if ((wiiPressed & WPAD_BUTTON_PLUS) | (GCPressed & PAD_BUTTON_Y)) {
 			flavor++;
 			flavor %= FLAVORS;
 			showName = 50;
-		} else if ((wiiPressed & WPAD_BUTTON_A) | (gcPressed & PAD_BUTTON_A)) {
+		} else if ((wiiPressed & WPAD_BUTTON_A) | (GCPressed & PAD_BUTTON_A)) {
 			music_pause(paused);
 			paused = !paused;
 		}
@@ -282,7 +271,7 @@ int main() {
 			"║ -/X      - Change BG color ║ +/Y - Change flavor  ║              Controls ║"
 			"║ A        - Toggle music    ║                      ║                       ║"
 			"║ 1/Z      - Send GBA Donut  ║                      ║                       ║"
-			"║ \xfe\xff/START - Exit            ║                      ║ Press 2/B to go back. ║"
+			"║ \xfd\xfe/START - Exit            ║                      ║ Press 2/B to go back. ║"
 			"╚════════════════════════════╩══════════════════════╩═══════════════════════╝\e[40m");
 		} else {
 			printf("\e[23;0H" "\e[104m"
@@ -299,7 +288,7 @@ int main() {
 			showName--;
 		printf("\e[0m\e[4%um", bgColor);
 		VIDEO_WaitVSync();
-	} while (!(wiiPressed & WPAD_BUTTON_HOME) & !(gcPressed & PAD_BUTTON_START));
+	} while (!(wiiPressed & WPAD_BUTTON_HOME) & !(GCPressed & PAD_BUTTON_START));
 	music_free();
 	return 0;
 }

@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <ogc/conf.h>
 #include <string.h>
+#include <grrmod.h>
 
 #include "music.h"
 
@@ -9,33 +10,33 @@
 
 #include "music_mod.h"
 
-#define FILETYPE_COUNT 18
+#define FILETYPE_COUNT 16
 
 static bool paused = false;
 static u8 *module;
 
-const char *moduleTypes[FILETYPE_COUNT] = {
+static const char *moduleTypes[FILETYPE_COUNT] = {
 	[0] = "669",
 	[1] = "amf",
-	[2] = "apun",
-	[3] = "dsm",
-	[4] = "far",
-	[5] = "gdm",
-	[6] = "imf",
-	[7] = "it",
-	[8] = "med",
-	[9] = "mod",
-	[10] = "mtm",
-	[11] = "okt",
-	[12] = "s3m",
-	[13] = "stm",
-	[14] = "stx",
-	[15] = "ult",
-	[16] = "uni",
-	[17] = "xm",
+	// [2] = "apun",
+	[2] = "dsm",
+	[3] = "far",
+	[4] = "gdm",
+	[5] = "imf",
+	[6] = "it",
+	[7] = "med",
+	[8] = "mod",
+	[9] = "mtm",
+	[10] = "okt",
+	[11] = "s3m",
+	[12] = "stm",
+	[13] = "stx",
+	[14] = "ult",
+	// [15] = "uni",
+	[15] = "xm",
 };
 
-bool is_title_empty(const char *title) {
+static bool is_title_empty(const char *title) {
 	if (title[0] == '\0') return true;
 
 	const int length = strlen(title) - 1;
@@ -47,7 +48,7 @@ bool is_title_empty(const char *title) {
 	return isAllSpaces;
 }
 
-bool music_attempt(const char *type) {
+static bool music_attempt(const char *type) {
 	char tmp[11] = "music.";
 	strcat(tmp, type);
 	return file_exists(tmp);
@@ -56,7 +57,6 @@ bool music_attempt(const char *type) {
 void music_init(char *title_display) {
 	char tmp[11] = "music.";
 	u8 i;
-	FILE *f;
 
 	for (i = 0; i < FILETYPE_COUNT; i++) {
 		if (music_attempt(moduleTypes[i])) {
@@ -65,10 +65,14 @@ void music_init(char *title_display) {
 		}
 	}
 
+	FILE *f;
 	f = file_open(tmp, "rb");
 
+	#ifndef GC
 	GRRMOD_Init(CONF_GetSoundMode()); // check for mono
-
+	#else
+	GRRMOD_Init(SYS_GetSoundMode()); // check for mono
+	#endif
 	if (f) {
 
 		fseek(f, 0, SEEK_END);

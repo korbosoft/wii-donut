@@ -7,7 +7,12 @@ ifeq ($(strip $(DEVKITPPC)),)
 $(error "Please set DEVKITPPC in your environment. export DEVKITPPC=<path to>devkitPPC")
 endif
 
-include $(DEVKITPPC)/wii_rules
+# check for GC variable (make GC=1)
+ifeq ($(GC),1)
+include $(abspath $(dir $(firstword $(MAKEFILE_LIST))))/gamecube.mk
+else
+include $(abspath $(dir $(firstword $(MAKEFILE_LIST))))/wii.mk
+endif
 
 #---------------------------------------------------------------------------------
 # TARGET is the name of the output
@@ -16,25 +21,16 @@ include $(DEVKITPPC)/wii_rules
 # INCLUDES is a list of directories containing extra header files
 #---------------------------------------------------------------------------------
 TARGET		:=	$(notdir $(CURDIR))
-BUILD		:=	build
 SOURCES		:=	source
 DATA		:=	data
 INCLUDES	:=
-VERSION 	:=	v4.1.2
+VERSION 	:=	v4.2.0
 
 #---------------------------------------------------------------------------------
 # options for code generation
 #---------------------------------------------------------------------------------
 
-CFLAGS	= -g -O2 -fexec-charset=CP437 -Wall -DVERSION=\"$(VERSION)\" $(MACHDEP) $(INCLUDE)
-CXXFLAGS	=	$(CFLAGS)
-
-LDFLAGS	=	-g $(MACHDEP) -Wl,-Map,$(notdir $@).map
-
-#---------------------------------------------------------------------------------
-# any extra libraries we wish to link with the project
-#---------------------------------------------------------------------------------
-LIBS	:=	-lfat -lwiiuse -lbte -lgrrmod -laesnd -logc -lm
+LDFLAGS		=	-g $(MACHDEP) -Wl,-Map,$(notdir $@).map
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
@@ -93,7 +89,6 @@ export INCLUDE	:=	$(foreach dir,$(INCLUDES), -iquote $(CURDIR)/$(dir)) \
 #---------------------------------------------------------------------------------
 export LIBPATHS	:= -L$(LIBOGC_LIB) $(foreach dir,$(LIBDIRS),-L$(dir)/lib)
 
-export OUTPUT	:=	$(CURDIR)/boot
 .PHONY: $(BUILD) clean
 
 #---------------------------------------------------------------------------------
@@ -104,7 +99,7 @@ $(BUILD):
 #---------------------------------------------------------------------------------
 clean:
 	@echo clean ...
-	@rm -fr $(BUILD) $(OUTPUT).elf $(OUTPUT).dol
+	@rm -fr build-* $(OUTPUT).elf $(OUTPUT).dol
 
 #---------------------------------------------------------------------------------
 run:
@@ -114,11 +109,12 @@ run:
 release:
 	mkdir -p korbodonut
 	cp boot.dol meta.xml icon.png ./korbodonut/
-	cp build/boot.elf.map donut.map
+	cp build-gc/donut-gc.elf.map donut-gc.map
+	cp build-wii/boot.elf.map donut-wii.map
 	zip -rv donut ./korbodonut/
 	rm -rf ./korbodonut/
-	gh release create $(VERSION) donut.zip donut.map
-	rm -f donut.map donut.zip
+	gh release create $(VERSION) donut.zip donut-gc.dol donut-wii.map donut-gc.map
+	rm -f donut-wii.map donut-gc.map donut-wii.zip
 
 #---------------------------------------------------------------------------------
 else
