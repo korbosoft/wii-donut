@@ -7,6 +7,7 @@
 #include "goombasend.h"
 #include "input.h"
 #include "music.h"
+#include "strings.h"
 #include "text.h"
 
 #define PI_TIMES_2 6.2831853071795865
@@ -133,8 +134,8 @@ static void send_donut(void) {
 
 	print("\e[0m\e[40;37m" "\e[23;0H" "\e[104m"
 	"╔═══════════════════════════════════════════════════════════════════════════╗"
-	"║ \e[4mGBA Donut\e[0m\e[104;37m ┌─┐ Connect your GBA to controller port     Press +/Y to cancel ║"
-	"║           │Θ│ 2 with a GBA link cable.             ╒═──═╕                 ║"
+	"║ \e[4mGBA Donut\e[0m\e[104;37m ┌─┐ Connect your GBA to controller port     " STRING_CANCEL " ║"
+	"║           │\xfb│ 2 with a GBA link cable.             ╒═──═╕                 ║"
 	"║           │2│                                      │+░░∞│                 ║"
 	"║           └─┘                                      └────┘      Waiting... ║"
 	"╚═══════════════════════════════════════════════════════════════════════════╝\e[40m");
@@ -151,7 +152,7 @@ static void send_donut(void) {
 	print("\e[40m" "\e[23;0H" "\e[104m"
 	"╔═══════════════════════════════════════════════════════════════════════════╗"
 	"║ \e[4mGBA Donut\e[0m\e[104;37m ┌─┐╔═══════════════════════════════════════╗                    ║"
-	"║           │Θ╪╝                                     ╒═╨─═╕                 ║"
+	"║           │\xfc╪╝                                     ╒═╨─═╕                 ║"
 	"║           │2│                                      │+▒▒∞│                 ║"
 	"║           └─┘                                      └────┘ Transferring... ║"
 	"╚═══════════════════════════════════════════════════════════════════════════╝\e[40m");
@@ -161,7 +162,7 @@ static void send_donut(void) {
 	print("\e[40m" "\e[23;0H" "\e[104m"
 	"╔═══════════════════════════════════════════════════════════════════════════╗"
 	"║ \e[4mGBA Donut\e[0m\e[104;37m ┌─┐╔══════════════════√════════════════════╗                    ║"
-	"║           │Θ╪╝                                     ╒═╨─═╕                 ║"
+	"║           │\xfc╪╝                                     ╒═╨─═╕                 ║"
 	"║           │2│                                      │+▓▓∞│                 ║"
 	"║           └─┘                                      └────┘        Success! ║"
 	"╚═══════════════════════════════════════════════════════════════════════════╝\e[40m");
@@ -266,20 +267,14 @@ int main() {
 		B = fmod(B + phi_spacing, PI_TIMES_2);
 		format_name(flavors[flavor].name, name);
 		if (showControls) {
-			print("\e[23;0H" "\e[104m"
-			"╔════════════════════════════╦══════════════════════╦═══════════════════════╗"
-			"║ -/X      - Change BG color ║ +/Y - Change flavor  ║              Controls ║"
-			"║ A        - Toggle music    ║                      ║                       ║"
-			"║ 1/Z      - Send GBA Donut  ║                      ║                       ║"
-			"║ \xfd\xfe/START - Exit            ║                      ║ Press 2/B to go back. ║"
-			"╚════════════════════════════╩══════════════════════╩═══════════════════════╝\e[40m");
+			print("\e[23;0H" "\e[104m" STRING_CONTROLS_BOX "\e[40m");
 		} else {
 			printf("\e[23;0H" "\e[104m"
 			"╔═══════════════════════════════════════════════════════════════════════════╗"
 			"║ \e[4mKorbo's Wii Donut Mod %s   %s\e[0m\e[104;37m "                      "║"
 			"║ Based on the original donut.c by Andy Sloane <andy@a1k0n.net>             ║"
 			"║ Ported by emilydaemon <emilydaemon@donut.eu.org>, Modified by Korbo       ║"
-			"║ Default Music by Jogeir Liljedahl                 Press 2/B for controls. ║"
+			"║ Default Music by Jogeir Liljedahl                 " STRING_CONTROLS     " ║"
 			"╚═══════════════════════════════════════════════════════════════════════════╝\e[40m", VERSION, splash);
 		// printf("cwd: %s\n", getcwd(NULL, 0));
 		}
