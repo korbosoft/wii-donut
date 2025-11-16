@@ -1,10 +1,7 @@
 build-*
 *.elf
 *.dol
+*.gba
 *.map
 *.kate-swp
 *.zip
-# libs/*/pkg
-# libs/*/src
-# libs/*/*.tar.gz
-# libs/*/*.tar.zst

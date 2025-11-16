@@ -20,7 +20,7 @@ endif
 # INCLUDES is a list of directories containing extra header files
 #---------------------------------------------------------------------------------
 TARGET		:=	$(notdir $(CURDIR))
-SOURCES		:=	source
+SOURCES		:=	main
 DATA		:=	data
 INCLUDES	:=
 

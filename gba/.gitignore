@@ -1,0 +1,6 @@
+*.gba
+*.elf
+*.sav
+data/donut
+data/donut.h
+build

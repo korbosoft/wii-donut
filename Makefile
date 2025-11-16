@@ -1,16 +1,22 @@
-.PHONY: clean gamecube wii
+.PHONY: clean gba gamecube wii
 
-VERSION	:=	v4.2.0
+VERSION	:=	v4.3.0
 
-all: gamecube wii
+CURDIR = $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+
+all: gba gamecube wii
+
+gba:
+	@echo Building GBA version
+	@$(MAKE) --no-print-directory -C $(CURDIR)/gba
 
 gamecube:
 	@echo Building GameCube version
-	@$(MAKE) --no-print-directory -f $(abspath $(dir $(lastword $(MAKEFILE_LIST))))/common.mk GC=1 VERSION=$(VERSION)
+	@$(MAKE) --no-print-directory -f $(CURDIR)/common.mk GC=1 VERSION=$(VERSION)
 
 wii:
 	@echo Building Wii version
-	@$(MAKE) --no-print-directory -f $(abspath $(dir $(lastword $(MAKEFILE_LIST))))/common.mk VERSION=$(VERSION)
+	@$(MAKE) --no-print-directory -f $(CURDIR)/common.mk VERSION=$(VERSION)
 
 clean:
 	@echo clean ...
