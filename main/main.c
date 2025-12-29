@@ -65,18 +65,20 @@ static void render_frame(float A, float B, Donut flavor) {
 			const float x = circlex * (cosB * cosphi + sinA * sinB * sinphi) - circley * cosA * sinB;
 			const float y = circlex * (sinB * cosphi - sinA * cosB * sinphi) + circley * cosA * cosB;
 			const float z = K2 + cosA * circlex * sinphi + circley * sinA;
-			const float ooz = 1 / z;  // "one over z"
+			const float ooz = 1 / z;  // "One Over Z"
 
 			// x and y projection.  note that y is negated here, because y
 			// goes up in 3D space but down on 2D displays.
-			const u8 xp = (u8) (SCREEN_WIDTH / 2 + K1 * ooz * x * 2); // multiplied by 2 to make wide again -- Korbo
+			// EDIT: x multiplied by 2 to account for 8x16 characters -- Korbo
+			const u8 xp = (u8) (SCREEN_WIDTH / 2 + K1 * ooz * x * 2);
 			const u8 yp = (u8) (SCREEN_HEIGHT / 2 - K1 * ooz * y);
 
 			// calculate luminance.  ugly, but correct.
 			const float L = cosphi * costheta * sinB - cosA * costheta * sinphi - sinA * sintheta + cosB * (cosA * sintheta - costheta * sinA * sinphi);
 			// L ranges from -sqrt(2) to +sqrt(2).  If it's < 0, the surface
 			// is pointing away from us, so we won't bother trying to plot it.
-			if (flavor.flags.ghost ? L <= 0 : L > 0) { // fuck you i'm plotting it anyways -- Korbo
+			// EDIT: fuck you i'm plotting it anyways -- Korbo
+			if (flavor.flags.ghost ? L <= 0 : L > 0) {
 				// test against the z-buffer.  larger 1/z means the pixel is
 				// closer to the viewer than what's already plotted.
 				// printf("xp: %d, yp: %d\n", xp, yp);
@@ -84,7 +86,10 @@ static void render_frame(float A, float B, Donut flavor) {
 				if (ooz > zBuffer[xp][yp]) {
 					zBuffer[xp][yp] = ooz;
 					const s8 luminance_index = L * (11 / sqrt(2));
-					underBuffer[xp][yp] = (theta < M_PI);
+					// const int wave = theta < M_PI ? (M_PI - (sin(phi * 8))) : -(M_PI - (sin(phi * 8)));
+					float wave = (0.5 - sin(phi * 12)) / 5;
+					// if (wave >= 3) wave = -wave;
+					underBuffer[xp][yp] = (wave > theta) || (theta > M_PI + wave);
 					// luminance_index is now in the range 0..11 (8*sqrt(2) = 11.3)
 					// now we lookup the character corresponding to the
 					// luminance and plot it in our output:
