@@ -14,6 +14,7 @@ void render_frame(float A, float B, Donut flavor) {
 	const float K1 = SCREEN_HEIGHT * K2 * 3 / (8 * (R1+R2));
 	char output[SCREEN_WIDTH][SCREEN_HEIGHT];
 	float zBuffer[SCREEN_WIDTH][SCREEN_HEIGHT];
+	float depthBuffer[SCREEN_WIDTH][SCREEN_HEIGHT];
 	bool underBuffer[SCREEN_WIDTH][SCREEN_HEIGHT];
 
 
@@ -68,6 +69,7 @@ void render_frame(float A, float B, Donut flavor) {
 					float wave = (0.5 - sin(phi * 12)) / 5;
 					// if (wave >= 3) wave = -wave;
 					underBuffer[xp][yp] = (wave > theta) || (theta > M_PI + wave);
+					depthBuffer[xp][yp] = L * (360 / sqrt(2));
 					// luminance_index is now in the range 0..11 (8*sqrt(2) = 11.3)
 					// now we lookup the character corresponding to the
 					// luminance and plot it in our output:
@@ -94,8 +96,7 @@ void render_frame(float A, float B, Donut flavor) {
 				}
 			}
 			if (flavor.flags.lolcat && (output[i][j] != ' ')) {
-				GXColor rainbow = HSV_to_RGB(hue, 1, 1);
-				hue = fmod(hue + 1, 360);
+				GXColor rainbow = HSV_to_RGB(depthBuffer[i][j], 1, 1);
 				RGB_escape(rainbow.r, rainbow.g, rainbow.b, true);
 			} else if (underBuffer[i][j]) {
 				RGB_escape(flavor.bottom.r, flavor.bottom.g, flavor.bottom.b, true);

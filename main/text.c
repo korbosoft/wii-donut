@@ -3,51 +3,33 @@
 #include <stdio.h>
 #include <string.h>
 
-static int calculate_padding(const char *input, size_t resultingLength) {
+static void generate_padding(const char *input, const size_t resultingLength, char *output) {
 	const size_t strLength = strlen(input);
-	int paddingNeeded;
+	size_t paddingNeeded;
 
 	if (strLength >= resultingLength) {
 		paddingNeeded = 0;
 	} else {
 		paddingNeeded = resultingLength - strLength;
 	}
-	return paddingNeeded;
+
+	if (paddingNeeded != 0)
+		memset(output, ' ', paddingNeeded);
+	output[paddingNeeded] = '\0';
 }
 
-void format_title(const char *input, char *output) {
-	int paddingNeeded;
-	char prefix[82];
+void format_info(const char *prefix, const char *input, char output[78]) {
+	char padding[82];
+	generate_padding(input, 76 - strlen(prefix), padding);
 
-	strcpy(prefix, "\e[4mSong: ");
-
-	paddingNeeded = calculate_padding(input, 71);
-	memset(output, ' ', paddingNeeded);
-	output[paddingNeeded] = '\0';
-	strcat(prefix, input);
-	strcat(output, prefix);
-}
-
-void format_name(const char *input, char *output) {
-	int paddingNeeded;
-	char prefix[82];
-
-	strcpy(prefix, "\e[4mFlavor: ");
-
-	paddingNeeded = calculate_padding(input, 69);
-	memset(output, ' ', paddingNeeded);
-	output[paddingNeeded] = '\0';
-	strcat(prefix, input);
-	strcat(output, prefix);
+	snprintf(output, 81, "%s\e[4m%s%s", padding, prefix, input);
 }
 
 void format_splash(const char *input, char *output) {
-	int paddingNeeded;
+	char padding[43];
+	generate_padding(input, 42, padding);
 
-	paddingNeeded = calculate_padding(input, 42);
-	memset(output, ' ', paddingNeeded);
-	output[paddingNeeded] = '\0';
-	strcat(output, input);
+	snprintf(output, 43, "%s%s", padding, input);
 }
 
 int print(const char *str) {

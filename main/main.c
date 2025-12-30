@@ -10,8 +10,6 @@
 #include "strings.h"
 #include "text.h"
 
-#define SPLASH_COUNT 5
-
 static void *xfb = NULL;
 static GXRModeObj *rmode = NULL;
 
@@ -20,19 +18,19 @@ volatile u32 transval = 0;
 volatile u32 resval = 0;
 
 static bool paused = true;
-static u8 frosting_flavor = 0;
+static u8 frostingFlavor = 0;
 
 static void send_donut(void) {
 	bool prev_paused = paused;
 	music_pause(true);
 
-	print("\e[0m\e[40;37m" "\e[23;0H" "\e[104;37m"
+	print("\e[23;0H" "\e[0;0m\e[40;37m" "\e[104;37m"
 	"╔═══════════════════════════════════════════════════════════════════════════╗"
-	"║ \e[4mGBA Donut\e[0m\e[104;37m ┌─┐ Connect your GBA to controller port     " STRING_CANCEL " ║"
+	"║ \e[4mGBA Donut\e[0;0m\e[104;37m ┌─┐ Connect your GBA to controller port     " STRING_CANCEL " ║"
 	"║           │\xfb│ 2 with a GBA link cable.             ╒═──═╕                 ║"
 	"║           │2│                                      │+░░∞│                 ║"
 	"║           └─┘                                      └────┘      Waiting... ║"
-	"╚═══════════════════════════════════════════════════════════════════════════╝\e[40m");
+	"╚═══════════════════════════════════════════════════════════════════════════╝\e[0m");
 
 	while (wait_for_gba()) {
 		input_scan();
@@ -43,27 +41,29 @@ static void send_donut(void) {
 		}
 	}
 
-	print("\e[40m" "\e[23;0H" "\e[104;37m"
+	print("\e[23;0H" "\e[104;37m"
 	"╔═══════════════════════════════════════════════════════════════════════════╗"
 	"║ \e[4mGBA Donut\e[0m\e[104;37m ┌─┐╔═══════════════════════════════════════╗                    ║"
 	"║           │\xfc╪╝                                     ╒═╨─═╕                 ║"
 	"║           │2│                                      │+▒▒∞│                 ║"
 	"║           └─┘                                      └────┘ Transferring... ║"
-	"╚═══════════════════════════════════════════════════════════════════════════╝\e[40m");
+	"╚═══════════════════════════════════════════════════════════════════════════╝\e[0m");
 
 	send_rom();
 
-	print("\e[40m" "\e[23;0H" "\e[104;37m"
+	print("\e[23;0H" "\e[104;37m"
 	"╔═══════════════════════════════════════════════════════════════════════════╗"
 	"║ \e[4mGBA Donut\e[0m\e[104;37m ┌─┐╔══════════════════√════════════════════╗                    ║"
 	"║           │\xfc╪╝                                     ╒═╨─═╕                 ║"
 	"║           │2│                                      │+▓▓∞│                 ║"
 	"║           └─┘                                      └────┘        Success! ║"
-	"╚═══════════════════════════════════════════════════════════════════════════╝\e[40m");
+	"╚═══════════════════════════════════════════════════════════════════════════╝\e[0m");
 
 	sleep(3);
 	music_pause(!prev_paused);
 }
+
+#define SPLASH_COUNT 6
 
 static const char *splashMessages[SPLASH_COUNT] = {
 	[0] = "Also try DS Donut!",
@@ -71,12 +71,13 @@ static const char *splashMessages[SPLASH_COUNT] = {
 	[2] = "oh man please to help i am not good with c",
 	[3] = "(\"Doughnut\" if you're british)",
 	[4] = "Korbo loves you <3",
+	[5] = "Did you know you can change the music?",
 };
 
 //---------------------------------------------------------------------------------
 int main() {
 	bool showControls = false;
-	char splash[43], title[82], name[82];
+	char splash[43], title[82], frostingName[82], doughName[82];
 	//---------------------------------------------------------------------------------
 	// Initialise the video system
 	VIDEO_Init();
@@ -136,7 +137,7 @@ int main() {
 	prepare_rom();
 
 	float A = 1, B = 1;
-	u8 showName = 0;
+	u8 showFrosting = 0;
 	do {
 		input_scan();
 		input_down(0, 0);
@@ -148,19 +149,19 @@ int main() {
 			// bgColor++;
 			// bgColor %= 7;
 		} else if ((wiiPressed & WPAD_BUTTON_PLUS) | (GCPressed & PAD_BUTTON_Y)) {
-			frosting_flavor++;
-			frosting_flavor %= FROSTING_FLAVORS;
-			showName = 50;
+			frostingFlavor++;
+			frostingFlavor %= FROSTING_FLAVORS;
+			showFrosting = 50;
 		} else if ((wiiPressed & WPAD_BUTTON_A) | (GCPressed & PAD_BUTTON_A)) {
 			music_pause(paused);
 			paused = !paused;
 		}
-		render_frame(A, B, frosting[frosting_flavor]);
+		render_frame(A, B, frosting[frostingFlavor]);
 		A = fmod(A + THETA_SPACING, PI_TIMES_2);
 		B = fmod(B + PHI_SPACING, PI_TIMES_2);
-		format_name(frosting[frosting_flavor].name, name);
+		format_info("Frosting: ", frosting[frostingFlavor].name, frostingName);
 		if (showControls) {
-			print("\e[23;0H" "\e\e[104;37m" STRING_CONTROLS_BOX "\e[40m");
+			print("\e[23;0H" "\e[104;37m" STRING_CONTROLS_BOX "\e[40m");
 		} else {
 			printf("\e[23;0H" "\e[104;37m"
 			"╔═══════════════════════════════════════════════════════════════════════════╗"
@@ -171,9 +172,9 @@ int main() {
 			"╚═══════════════════════════════════════════════════════════════════════════╝\e[40m", VERSION, splash);
 		// printf("cwd: %s\n", getcwd(NULL, 0));
 		}
-		printf("\e[0;0H" "%s" "\e[0m", (showName != 0) ? name : title);
-		if (showName)
-			showName--;
+		printf("\e[0;0H" "%s" "\e[0;0m", (showFrosting != 0) ? frostingName : title);
+		if (showFrosting)
+			showFrosting--;
 		VIDEO_WaitVSync();
 	} while (!(wiiPressed & WPAD_BUTTON_HOME) & !(GCPressed & PAD_BUTTON_START));
 	music_free();
