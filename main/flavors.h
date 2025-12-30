@@ -3,12 +3,12 @@
 
 #include "color.h"
 
-#define FLAVORS 17
+#define FROSTING_FLAVORS 17
 
 typedef struct {
 	char name[17];
-	RGB top;
-	RGB bottom;
+	GXColor top;
+	GXColor bottom;
 	struct _flags {
 		bool lolcat : 1;
 		bool ghost : 1;
@@ -16,7 +16,7 @@ typedef struct {
 	} flags;
 } Donut;
 
-const Donut flavors[FLAVORS] = {
+static const Donut frosting[FROSTING_FLAVORS] = {
 	{
 		"Powdered",
 		{255, 255, 255},

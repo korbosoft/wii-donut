@@ -1,6 +1,6 @@
 #include <math.h>
 #include <unistd.h>
-#include "color.h"
+#include "donut.h"
 #include "file.h"
 #include "flavors.h"
 #include "font.h"
@@ -10,11 +10,8 @@
 #include "strings.h"
 #include "text.h"
 
-#define PI_TIMES_2 6.2831853071795865
 #define SPLASH_COUNT 5
-#define SCREEN_WIDTH 77
-#define SCREEN_HEIGHT 22
-#define SCREEN_SIZE SCREEN_WIDTH * SCREEN_HEIGHT
+
 static void *xfb = NULL;
 static GXRModeObj *rmode = NULL;
 
@@ -23,121 +20,13 @@ volatile u32 transval = 0;
 volatile u32 resval = 0;
 
 static bool paused = true;
-static u8 bgColor = 0;
-static u8 flavor = 0;
-
-static const float theta_spacing = 0.07;
-static const float phi_spacing = 0.02;
-
-static void render_frame(float A, float B, Donut flavor) {
-	float hue = 0;
-	const u8 R1 = 1, R2 = 2, K2 = 5;
-
-	const float K1 = SCREEN_HEIGHT * K2 * 3 / (8 * (R1+R2));
-	char output[SCREEN_WIDTH][SCREEN_HEIGHT];
-	float zBuffer[SCREEN_WIDTH][SCREEN_HEIGHT];
-	bool underBuffer[SCREEN_WIDTH][SCREEN_HEIGHT];
-
-
-	// precompute sines and cosines of A and B
-	const float cosA = cos(A), sinA = sin(A);
-	const float cosB = cos(B), sinB = sin(B);
-	memset(output, ' ', sizeof(char) * SCREEN_SIZE);
-	memset(zBuffer, 0, sizeof(float) * SCREEN_SIZE);
-
-	// theta goes around the cross-sectional circle of a torus
-	for (float theta=0; theta < PI_TIMES_2; theta += theta_spacing) {
-		// precompute sines and cosines of theta
-		const float costheta = cos(theta), sintheta = sin(theta);
-
-		// phi goes around the center of revolution of a torus
-		for (float phi=0; phi < PI_TIMES_2; phi += phi_spacing) {
-			// precompute sines and cosines of phi
-			const float cosphi = cos(phi), sinphi = sin(phi);
-
-			// the x,y coordinate of the circle, before revolving (factored
-			// out of the above equations)
-			const float circlex = R2 + R1 * costheta;
-			const float circley = R1 * sintheta;
-
-			// final 3D (x,y,z) coordinate after rotations, directly from
-			// our math above
-			const float x = circlex * (cosB * cosphi + sinA * sinB * sinphi) - circley * cosA * sinB;
-			const float y = circlex * (sinB * cosphi - sinA * cosB * sinphi) + circley * cosA * cosB;
-			const float z = K2 + cosA * circlex * sinphi + circley * sinA;
-			const float ooz = 1 / z;  // "One Over Z"
-
-			// x and y projection.  note that y is negated here, because y
-			// goes up in 3D space but down on 2D displays.
-			// EDIT: x multiplied by 2 to account for 8x16 characters -- Korbo
-			const u8 xp = (u8) (SCREEN_WIDTH / 2 + K1 * ooz * x * 2);
-			const u8 yp = (u8) (SCREEN_HEIGHT / 2 - K1 * ooz * y);
-
-			// calculate luminance.  ugly, but correct.
-			const float L = cosphi * costheta * sinB - cosA * costheta * sinphi - sinA * sintheta + cosB * (cosA * sintheta - costheta * sinA * sinphi);
-			// L ranges from -sqrt(2) to +sqrt(2).  If it's < 0, the surface
-			// is pointing away from us, so we won't bother trying to plot it.
-			// EDIT: fuck you i'm plotting it anyways -- Korbo
-			if (flavor.flags.ghost ? L <= 0 : L > 0) {
-				// test against the z-buffer.  larger 1/z means the pixel is
-				// closer to the viewer than what's already plotted.
-				// printf("xp: %d, yp: %d\n", xp, yp);
-
-				if (ooz > zBuffer[xp][yp]) {
-					zBuffer[xp][yp] = ooz;
-					const s8 luminance_index = L * (11 / sqrt(2));
-					// const int wave = theta < M_PI ? (M_PI - (sin(phi * 8))) : -(M_PI - (sin(phi * 8)));
-					float wave = (0.5 - sin(phi * 12)) / 5;
-					// if (wave >= 3) wave = -wave;
-					underBuffer[xp][yp] = (wave > theta) || (theta > M_PI + wave);
-					// luminance_index is now in the range 0..11 (8*sqrt(2) = 11.3)
-					// now we lookup the character corresponding to the
-					// luminance and plot it in our output:
-					output[xp][yp] = ".,-~:;=!*#$@"[flavor.flags.ghost ? luminance_index + 11 : luminance_index];
-				}
-			}
-		}
-	}
-
-	// now, dump output[] to the screen.
-	// bring cursor to "home" location
-	print("\e[2;0H");
-	for (int j = 0; j < SCREEN_HEIGHT; j++) {
-		for (int i = 0; i < SCREEN_WIDTH; i++) {
-			if (flavor.flags.radiates & (output[i][j] != ' ')) {
-				if (rand() % 3) {
-					RGB radiatedBg = generate_rad_noise(bgColor);
-					RGB_escape(
-						radiatedBg.r,
-						radiatedBg.g,
-						radiatedBg.b, false
-					);
-				}
-			}
-			if (flavor.flags.lolcat & (output[i][j] != ' ')) {
-				RGB rainbow = HSV_to_RGB(hue, 1, 1);
-				hue = fmod(hue + 1, 360);
-				RGB_escape(rainbow.r, rainbow.g, rainbow.b, true);
-			} else if (underBuffer[i][j]) {
-				RGB_escape(flavor.bottom.r, flavor.bottom.g, flavor.bottom.b, true);
-			} else {
-				RGB_escape(flavor.top.r, flavor.top.g, flavor.top.b, true);
-			}
-			putchar(output[i][j]);
-			printf("\e[0m\e[4%um", bgColor);
-		}
-		putchar('\n');
-		printf("\e[%u;0H", j + 2);
-
-	}
-
-}
+static u8 frosting_flavor = 0;
 
 static void send_donut(void) {
 	bool prev_paused = paused;
 	music_pause(true);
 
-	print("\e[0m\e[40;37m" "\e[23;0H" "\e[104m"
+	print("\e[0m\e[40;37m" "\e[23;0H" "\e[104;37m"
 	"╔═══════════════════════════════════════════════════════════════════════════╗"
 	"║ \e[4mGBA Donut\e[0m\e[104;37m ┌─┐ Connect your GBA to controller port     " STRING_CANCEL " ║"
 	"║           │\xfb│ 2 with a GBA link cable.             ╒═──═╕                 ║"
@@ -154,7 +43,7 @@ static void send_donut(void) {
 		}
 	}
 
-	print("\e[40m" "\e[23;0H" "\e[104m"
+	print("\e[40m" "\e[23;0H" "\e[104;37m"
 	"╔═══════════════════════════════════════════════════════════════════════════╗"
 	"║ \e[4mGBA Donut\e[0m\e[104;37m ┌─┐╔═══════════════════════════════════════╗                    ║"
 	"║           │\xfc╪╝                                     ╒═╨─═╕                 ║"
@@ -164,7 +53,7 @@ static void send_donut(void) {
 
 	send_rom();
 
-	print("\e[40m" "\e[23;0H" "\e[104m"
+	print("\e[40m" "\e[23;0H" "\e[104;37m"
 	"╔═══════════════════════════════════════════════════════════════════════════╗"
 	"║ \e[4mGBA Donut\e[0m\e[104;37m ┌─┐╔══════════════════√════════════════════╗                    ║"
 	"║           │\xfc╪╝                                     ╒═╨─═╕                 ║"
@@ -256,25 +145,24 @@ int main() {
 		} else if ((wiiPressed & WPAD_BUTTON_2) | (GCPressed & PAD_BUTTON_B)) {
 			showControls = !showControls;
 		} else if ((wiiPressed & WPAD_BUTTON_MINUS) | (GCPressed & PAD_BUTTON_X)) {
-			bgColor++;
-			bgColor %= 7;
+			// bgColor++;
+			// bgColor %= 7;
 		} else if ((wiiPressed & WPAD_BUTTON_PLUS) | (GCPressed & PAD_BUTTON_Y)) {
-			flavor++;
-			flavor %= FLAVORS;
+			frosting_flavor++;
+			frosting_flavor %= FROSTING_FLAVORS;
 			showName = 50;
 		} else if ((wiiPressed & WPAD_BUTTON_A) | (GCPressed & PAD_BUTTON_A)) {
 			music_pause(paused);
 			paused = !paused;
 		}
-		printf("\e[0m" "\e[4%um", bgColor);
-		render_frame(A, B, flavors[flavor]);
-		A = fmod(A + theta_spacing, PI_TIMES_2);
-		B = fmod(B + phi_spacing, PI_TIMES_2);
-		format_name(flavors[flavor].name, name);
+		render_frame(A, B, frosting[frosting_flavor]);
+		A = fmod(A + THETA_SPACING, PI_TIMES_2);
+		B = fmod(B + PHI_SPACING, PI_TIMES_2);
+		format_name(frosting[frosting_flavor].name, name);
 		if (showControls) {
-			print("\e[23;0H" "\e[104m" STRING_CONTROLS_BOX "\e[40m");
+			print("\e[23;0H" "\e\e[104;37m" STRING_CONTROLS_BOX "\e[40m");
 		} else {
-			printf("\e[23;0H" "\e[104m"
+			printf("\e[23;0H" "\e[104;37m"
 			"╔═══════════════════════════════════════════════════════════════════════════╗"
 			"║ \e[4mKorbo's Wii Donut Mod %s   %s\e[0m\e[104;37m "                      "║"
 			"║ Based on the original donut.c by Andy Sloane <andy@a1k0n.net>             ║"
@@ -283,10 +171,9 @@ int main() {
 			"╚═══════════════════════════════════════════════════════════════════════════╝\e[40m", VERSION, splash);
 		// printf("cwd: %s\n", getcwd(NULL, 0));
 		}
-		printf("\e[0;0H" "\e[0m\e[4%um" "%s", bgColor, (showName != 0) ? name : title);
+		printf("\e[0;0H" "%s" "\e[0m", (showName != 0) ? name : title);
 		if (showName)
 			showName--;
-		printf("\e[0m\e[4%um", bgColor);
 		VIDEO_WaitVSync();
 	} while (!(wiiPressed & WPAD_BUTTON_HOME) & !(GCPressed & PAD_BUTTON_START));
 	music_free();
