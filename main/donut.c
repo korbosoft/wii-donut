@@ -7,22 +7,25 @@
 
 #include "text.h"
 
+typedef struct {
+	char image[SCREEN_WIDTH][SCREEN_HEIGHT];
+	float zBuffer[SCREEN_WIDTH][SCREEN_HEIGHT];
+	float depthMap[SCREEN_WIDTH][SCREEN_HEIGHT];
+	bool isDough[SCREEN_WIDTH][SCREEN_HEIGHT];
+} Render;
+
+float hue_offset = 0;
 void render_frame(float A, float B, Donut flavor) {
-	float hue = 0;
 	const u8 R1 = 1, R2 = 2, K2 = 5;
 
 	const float K1 = SCREEN_HEIGHT * K2 * 3 / (8 * (R1+R2));
-	char output[SCREEN_WIDTH][SCREEN_HEIGHT];
-	float zBuffer[SCREEN_WIDTH][SCREEN_HEIGHT];
-	float depthBuffer[SCREEN_WIDTH][SCREEN_HEIGHT];
-	bool underBuffer[SCREEN_WIDTH][SCREEN_HEIGHT];
-
+	Render render;
 
 	// precompute sines and cosines of A and B
 	const float cosA = cos(A), sinA = sin(A);
 	const float cosB = cos(B), sinB = sin(B);
-	memset(output, ' ', sizeof(char) * SCREEN_SIZE);
-	memset(zBuffer, 0, sizeof(float) * SCREEN_SIZE);
+	memset(render.image, ' ', sizeof(char) * SCREEN_SIZE);
+	memset(render.zBuffer, 0, sizeof(float) * SCREEN_SIZE);
 
 	// theta goes around the cross-sectional circle of a torus
 	for (float theta=0; theta < PI_TIMES_2; theta += THETA_SPACING) {
@@ -62,18 +65,18 @@ void render_frame(float A, float B, Donut flavor) {
 				// closer to the viewer than what's already plotted.
 				// printf("xp: %d, yp: %d\n", xp, yp);
 
-				if (ooz > zBuffer[xp][yp]) {
-					zBuffer[xp][yp] = ooz;
-					const s8 luminance_index = L * (11 / sqrt(2));
+				if (ooz > render.zBuffer[xp][yp]) {
+					render.zBuffer[xp][yp] = ooz;
+					const s8 luminance_index = L * (5 / M_SQRT2);
 					// const int wave = theta < M_PI ? (M_PI - (sin(phi * 8))) : -(M_PI - (sin(phi * 8)));
 					float wave = (0.5 - sin(phi * 12)) / 5;
 					// if (wave >= 3) wave = -wave;
-					underBuffer[xp][yp] = (wave > theta) || (theta > M_PI + wave);
-					depthBuffer[xp][yp] = L * (360 / sqrt(2));
-					// luminance_index is now in the range 0..11 (8*sqrt(2) = 11.3)
+					render.isDough[xp][yp] = (wave > theta) || (theta > M_PI + wave);
+					render.depthMap[xp][yp] = L / M_SQRT2;
+					// luminance_index is now in the range 0..5 (8*sqrt(2) = 11.3)
 					// now we lookup the character corresponding to the
 					// luminance and plot it in our output:
-					output[xp][yp] = ".,-~:;=!*#$@"[flavor.flags.ghost ? luminance_index + 11 : luminance_index];
+					render.image[xp][yp] = ".;>fM"[flavor.flags.ghost ? luminance_index + 4 : luminance_index];
 				}
 			}
 		}
@@ -85,29 +88,33 @@ void render_frame(float A, float B, Donut flavor) {
 	for (int j = 0; j < SCREEN_HEIGHT; j++) {
 		for (int i = 0; i < SCREEN_WIDTH; i++) {
 			print("\e[0;0m");
-			if (flavor.flags.radiates && (output[i][j] != ' ')) {
-				if (rand() % 3) {
-					GXColor radiatedBg = generate_rad_noise();
-					RGB_escape(
-						radiatedBg.r,
-						radiatedBg.g,
-						radiatedBg.b, false
-					);
+			if (render.image[i][j] != ' ') {
+				if (flavor.flags.radiates) {
+					if (rand() % 3) {
+						GXColor radiatedBg = generate_rad_noise();
+						RGB_escape(
+							radiatedBg.r,
+							radiatedBg.g,
+							radiatedBg.b, false
+						);
+					}
+				}
+				if (flavor.flags.rainbow) {
+					float hue = render.depthMap[i][j] * 360 + hue_offset;
+					if (hue > 360) hue -= 360;
+					GXColor rainbow = HSV_to_RGB(hue, 1, 1);
+					RGB_escape(rainbow.r, rainbow.g, rainbow.b, true);
+				} else if (render.isDough[i][j]) {
+					RGB_escape(flavor.bottom.r, flavor.bottom.g, flavor.bottom.b, true);
+				} else {
+					RGB_escape(flavor.top.r, flavor.top.g, flavor.top.b, true);
 				}
 			}
-			if (flavor.flags.lolcat && (output[i][j] != ' ')) {
-				GXColor rainbow = HSV_to_RGB(depthBuffer[i][j], 1, 1);
-				RGB_escape(rainbow.r, rainbow.g, rainbow.b, true);
-			} else if (underBuffer[i][j]) {
-				RGB_escape(flavor.bottom.r, flavor.bottom.g, flavor.bottom.b, true);
-			} else {
-				RGB_escape(flavor.top.r, flavor.top.g, flavor.top.b, true);
-			}
-			putchar(output[i][j]);
+			putchar(render.image[i][j]);
 		}
 		putchar('\n');
 		printf("\e[%u;0H", j + 2);
 
 	}
-
+	hue_offset = fmod(hue_offset + 1, 360);
 }

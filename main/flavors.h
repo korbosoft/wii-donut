@@ -10,7 +10,7 @@ typedef struct {
 	GXColor top;
 	GXColor bottom;
 	struct _flags {
-		bool lolcat : 1;
+		bool rainbow : 1;
 		bool ghost : 1;
 		bool radiates : 1;
 	} flags;
