@@ -16,9 +16,13 @@ typedef struct {
 
 float hue_offset = 0;
 void render_frame(float A, float B, Donut flavor) {
-	const u8 R1 = 1, R2 = 2, K2 = 5;
-
-	const float K1 = SCREEN_HEIGHT * K2 * 3 / (8 * (R1+R2));
+	const u8 K2 = 5;
+	float R1 = 1, R2 = 2;
+	// if (R1 + R2 > 3) {
+	// 	R1 = R1 / (R2 / 2);
+	// 	R2 = 2;
+	// }
+	const float K1 = SCREEN_HEIGHT * K2 * 3 / (8 * (R1 + R2));
 	Render render;
 
 	// precompute sines and cosines of A and B
@@ -26,6 +30,8 @@ void render_frame(float A, float B, Donut flavor) {
 	const float cosB = cos(B), sinB = sin(B);
 	memset(render.image, ' ', sizeof(char) * SCREEN_SIZE);
 	memset(render.zBuffer, 0, sizeof(float) * SCREEN_SIZE);
+	memset(render.depthMap, 0, sizeof(float) * SCREEN_SIZE);
+	memset(render.isDough, 0, sizeof(bool) * SCREEN_SIZE);
 
 	// theta goes around the cross-sectional circle of a torus
 	for (float theta=0; theta < PI_TIMES_2; theta += THETA_SPACING) {
@@ -60,23 +66,24 @@ void render_frame(float A, float B, Donut flavor) {
 			// L ranges from -sqrt(2) to +sqrt(2).  If it's < 0, the surface
 			// is pointing away from us, so we won't bother trying to plot it.
 			// EDIT: fuck you i'm plotting it anyways -- Korbo
-			if (flavor.flags.ghost ? L <= 0 : L > 0) {
+			if (flavor.special == GHOSTLY ? L <= 0 : L > 0) {
 				// test against the z-buffer.  larger 1/z means the pixel is
 				// closer to the viewer than what's already plotted.
 				// printf("xp: %d, yp: %d\n", xp, yp);
 
 				if (ooz > render.zBuffer[xp][yp]) {
 					render.zBuffer[xp][yp] = ooz;
-					const s8 luminance_index = L * (5 / M_SQRT2);
+					const float depth = L / M_SQRT2;
+					const s8 luminance_index = depth * 5;
 					// const int wave = theta < M_PI ? (M_PI - (sin(phi * 8))) : -(M_PI - (sin(phi * 8)));
 					float wave = (0.5 - sin(phi * 12)) / 5;
 					// if (wave >= 3) wave = -wave;
 					render.isDough[xp][yp] = (wave > theta) || (theta > M_PI + wave);
-					render.depthMap[xp][yp] = L / M_SQRT2;
+					render.depthMap[xp][yp] = depth;
 					// luminance_index is now in the range 0..5 (8*sqrt(2) = 11.3)
 					// now we lookup the character corresponding to the
 					// luminance and plot it in our output:
-					render.image[xp][yp] = ".;>fM"[flavor.flags.ghost ? luminance_index + 4 : luminance_index];
+					render.image[xp][yp] = ".;>fM"[flavor.special == GHOSTLY ? luminance_index + 4 : luminance_index];
 				}
 			}
 		}
@@ -88,8 +95,8 @@ void render_frame(float A, float B, Donut flavor) {
 	for (int j = 0; j < SCREEN_HEIGHT; j++) {
 		for (int i = 0; i < SCREEN_WIDTH; i++) {
 			print("\e[0;0m");
-			if (render.image[i][j] != ' ') {
-				if (flavor.flags.radiates) {
+			if (render.image[i][j] != ' ' || flavor.special == ANSISHADED) {
+				if (flavor.special == RADIOACTIVE) {
 					if (rand() % 3) {
 						GXColor radiatedBg = generate_rad_noise();
 						RGB_escape(
@@ -99,22 +106,30 @@ void render_frame(float A, float B, Donut flavor) {
 						);
 					}
 				}
-				if (flavor.flags.rainbow) {
+				if (flavor.special == RAINBOW) {
 					float hue = render.depthMap[i][j] * 360 + hue_offset;
 					if (hue > 360) hue -= 360;
 					GXColor rainbow = HSV_to_RGB(hue, 1, 1);
 					RGB_escape(rainbow.r, rainbow.g, rainbow.b, true);
+				} else if (flavor.special == ANSISHADED) {
+					float value = render.depthMap[i][j] * 255;
+
+					RGB_escape(value, value, value, true);
 				} else if (render.isDough[i][j]) {
 					RGB_escape(flavor.bottom.r, flavor.bottom.g, flavor.bottom.b, true);
 				} else {
 					RGB_escape(flavor.top.r, flavor.top.g, flavor.top.b, true);
 				}
 			}
-			putchar(render.image[i][j]);
+			if (flavor.special == ANSISHADED) {
+				putchar('\xDB');
+			} else {
+				putchar(render.image[i][j]);
+			}
 		}
 		putchar('\n');
 		printf("\e[%u;0H", j + 2);
 
 	}
-	hue_offset = fmod(hue_offset + 1, 360);
+	hue_offset = fmod(hue_offset + 1.5, 360);
 }

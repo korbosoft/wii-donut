@@ -14,14 +14,15 @@ static void *xfb = NULL;
 static GXRModeObj *rmode = NULL;
 
 u8 *resbuf, *cmdbuf;
-volatile u32 transval = 0;
-volatile u32 resval = 0;
+volatile u32 transval = 0, resval = 0;
 
 static bool paused = true;
 static u8 frostingFlavor = 0;
 
+extern s8 HWButton;
+
 static void send_donut(void) {
-	bool prev_paused = paused;
+	bool prevPaused = paused;
 	music_pause(true);
 
 	print("\e[23;0H" "\e[0;0m\e[40;37m" "\e[104;37m"
@@ -36,7 +37,7 @@ static void send_donut(void) {
 		input_scan();
 		input_down(0, 0);
 		if ((wiiPressed & WPAD_BUTTON_PLUS) | (GCPressed & PAD_BUTTON_Y)) {
-			music_pause(!prev_paused);
+			music_pause(!prevPaused);
 			return;
 		}
 	}
@@ -60,7 +61,7 @@ static void send_donut(void) {
 	"╚═══════════════════════════════════════════════════════════════════════════╝\e[0m");
 
 	sleep(3);
-	music_pause(!prev_paused);
+	music_pause(!prevPaused);
 }
 
 #define SPLASH_COUNT 6
@@ -120,6 +121,7 @@ int main() {
 	VIDEO_WaitVSync();
 	if(rmode->viTVMode&VI_NON_INTERLACE) VIDEO_WaitVSync();
 
+	// Initialize the file... thing. i can't really call it the "file system", can i
 	file_init();
 
 	srand(time(NULL));
@@ -159,9 +161,11 @@ int main() {
 		render_frame(A, B, frosting[frostingFlavor]);
 		A = fmod(A + THETA_SPACING, PI_TIMES_2);
 		B = fmod(B + PHI_SPACING, PI_TIMES_2);
-		format_info("Frosting: ", frosting[frostingFlavor].name, frostingName);
+		format_info("Flavor: ", frosting[frostingFlavor].name, frostingName);
 		if (showControls) {
 			print("\e[23;0H" "\e[104;37m" STRING_CONTROLS_BOX "\e[40m");
+		// } else if (showFrosting) {
+
 		} else {
 			printf("\e[23;0H" "\e[104;37m"
 			"╔═══════════════════════════════════════════════════════════════════════════╗"
@@ -176,7 +180,9 @@ int main() {
 		if (showFrosting)
 			showFrosting--;
 		VIDEO_WaitVSync();
-	} while (!(wiiPressed & WPAD_BUTTON_HOME) & !(GCPressed & PAD_BUTTON_START));
+	} while (!((wiiPressed & WPAD_BUTTON_HOME) || (GCPressed & PAD_BUTTON_START) || (HWButton != -1)));
 	music_free();
+	if (HWButton == SYS_POWEROFF)
+		SYS_ResetSystem(SYS_POWEROFF, 0, 0);
 	return 0;
 }

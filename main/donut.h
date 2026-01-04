@@ -3,7 +3,7 @@
 
 #include "flavors.h"
 
-#define PI_TIMES_2 6.2831853071795865
+#define PI_TIMES_2 (float)6.2831853071795865
 
 #define SCREEN_WIDTH 77
 #define SCREEN_HEIGHT 22

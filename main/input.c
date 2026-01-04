@@ -2,12 +2,30 @@
 
 u32 wiiPressed;
 u16 GCPressed;
+s8 HWButton = -1;
+
+static void ResetPressed(u32 thesevariables, void *arenotused) {
+	HWButton = SYS_HOTRESET;
+}
+
+#ifndef GC
+static void PowerPressed() {
+	HWButton = SYS_POWEROFF;
+}
+
+static void WiimotePowerPressed(s32 chan) {
+	if (chan == 0) PowerPressed();
+}
+#endif
 
 void input_init(void) {
 	#ifndef GC
 	WPAD_Init();
+	WPAD_SetPowerButtonCallback(WiimotePowerPressed);
+	SYS_SetPowerCallback(PowerPressed);
 	#endif
 	PAD_Init();
+	SYS_SetResetCallback(ResetPressed);
 }
 
 void input_scan(void) {

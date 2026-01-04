@@ -1,6 +1,8 @@
 #ifndef INPUT_H
 #define INPUT_H
 
+#include <ogcsys.h>
+
 #ifndef GC
 #include <wiiuse/wpad.h>
 #else

@@ -28,7 +28,6 @@ void format_info(const char *prefix, const char *input, char output[78]) {
 void format_splash(const char *input, char *output) {
 	char padding[43];
 	generate_padding(input, 42, padding);
-
 	snprintf(output, 43, "%s%s", padding, input);
 }
 

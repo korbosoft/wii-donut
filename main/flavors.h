@@ -3,17 +3,21 @@
 
 #include "color.h"
 
-#define FROSTING_FLAVORS 17
+#define FROSTING_FLAVORS 18
+
+enum DonutSpecial {
+	NORMAL,
+	RAINBOW,
+	GHOSTLY,
+	RADIOACTIVE,
+	ANSISHADED,
+};
 
 typedef struct {
 	char name[17];
 	GXColor top;
 	GXColor bottom;
-	struct _flags {
-		bool rainbow : 1;
-		bool ghost : 1;
-		bool radiates : 1;
-	} flags;
+	enum DonutSpecial special;
 } Donut;
 
 static const Donut frosting[FROSTING_FLAVORS] = {
@@ -21,103 +25,109 @@ static const Donut frosting[FROSTING_FLAVORS] = {
 		"Powdered",
 		{255, 255, 255},
 		{255, 255, 255},
-		{false, false, false}
+		NORMAL
 	},
 	{
 		"Lard Lad",
 		{245, 128, 195},
 		{206, 137, 55},
-		{false, false, false}
+		NORMAL
 	},
 	{
 		"Chocolate",
 		{112, 58, 42},
 		{206, 137, 55},
-		{false, false, false}
+		NORMAL
 	},
 	{
 		"Purple",
 		{138, 110, 210},
 		{206, 137, 55},
-		{false, false, false}
+		NORMAL
 	},
 	{
 		"Lemon",
 		{242, 255, 122},
 		{206, 137, 55},
-		{false, false, false}
+		NORMAL
 	},
 	{
 		"Strawberry",
 		{255, 113, 107},
 		{206, 137, 55},
-		{false, false, false}
+		NORMAL
 	},
 	{
 		"Pumpkin",
 		{255, 190, 99},
 		{206, 137, 55},
-		{false, false, false}
+		NORMAL
 	},
 	{
 		"Key Lime",
 		{189, 255, 130},
 		{206, 137, 55},
-		{false, false, false}
+		NORMAL
 	},
 	{
 		"Blueberry",
 		{105, 110, 255},
 		{206, 137, 55},
-		{false, false, false}
+		NORMAL
 	},
 	{
 		"Caramel",
 		{203, 111, 57},
 		{206, 137, 55},
-		{false, false, false}
+		NORMAL
 	},
 	{
 		"Pistachio",
 		{156, 255, 110},
 		{206, 137, 55},
-		{false, false, false}
+		NORMAL
 	},
 	{
 		"Toxic Waste",
 		{0, 255, 0},
 		{0, 255, 0},
-		{false, false, false}
+		NORMAL
 	},
 	{
 		"Glazed",
 		{232, 188, 135},
 		{232, 188, 135},
-		{false, false, false}
+		NORMAL
 	},
 	{
 		"Bagel",
 		{206, 137, 55},
 		{206, 137, 55},
-		{false, false, false}
+		NORMAL
 	},
 	{
 		"Ghost",
 		{255, 255, 255},
 		{255, 255, 255},
-		{false, true, false}
+		GHOSTLY
 	},
 	{
 		"Uranium-235",
 		{255, 224, 255},
 		{255, 224, 255},
-		{false, false, true}
+		RADIOACTIVE
 	},
 	{
 		"Rainbow",
 		{255, 0, 255},
 		{255, 0, 255},
-		{true, false, false}
+		RAINBOW
+	},
+	{
+		"ANSI",
+		{255, 0, 255},
+		{255, 0, 255},
+		ANSISHADED
 	}
 };
 
