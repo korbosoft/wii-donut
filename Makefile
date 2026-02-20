@@ -1,6 +1,6 @@
 .PHONY: clean gba gamecube wii
 
-VERSION	:=	v4.3.1
+VERSION	:=	v4.4.0
 
 CURDIR = $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
