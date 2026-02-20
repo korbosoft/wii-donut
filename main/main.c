@@ -19,8 +19,6 @@ volatile u32 transval = 0, resval = 0;
 static bool paused = true;
 static u8 frostingFlavor = 0;
 
-extern s8 HWButton;
-
 static void send_donut(void) {
 	bool prevPaused = paused;
 	music_pause(true);
@@ -97,7 +95,7 @@ int main() {
 	xfb = MEM_K0_TO_K1(SYS_AllocateFramebuffer(rmode));
 
 	// Initialise the console, required for printf
-	CON_Init(xfb,20,20,rmode->fbWidth-20,rmode->xfbHeight-20,rmode->fbWidth*VI_DISPLAY_PIX_SZ);
+	CON_Init(xfb,20,20,rmode->fbWidth,rmode->xfbHeight,rmode->fbWidth*VI_DISPLAY_PIX_SZ);
 
 	// Set up the video registers with the chosen mode
 	VIDEO_Configure(rmode);
@@ -180,9 +178,9 @@ int main() {
 		if (showFrosting)
 			showFrosting--;
 		VIDEO_WaitVSync();
-	} while (!((wiiPressed & WPAD_BUTTON_HOME) || (GCPressed & PAD_BUTTON_START) || (HWButton != -1)));
+		if ((wiiPressed & WPAD_BUTTON_HOME) || (GCPressed & PAD_BUTTON_START))
+			break;
+	} while (SYS_MainLoop());
 	music_free();
-	if (HWButton == SYS_POWEROFF)
-		SYS_ResetSystem(SYS_POWEROFF, 0, 0);
 	return 0;
 }
