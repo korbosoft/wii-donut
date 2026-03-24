@@ -1,1 +1,1 @@
-my magnum opus, the donut application
+my magnum opus, the donut homebrew app
