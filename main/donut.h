@@ -3,15 +3,12 @@
 
 #include "flavors.h"
 
-#define PI_TIMES_2 (float)6.2831853071795865
+#define DONUT_WIDTH 77
+#define DONUT_HEIGHT 22
+#define DONUT_FOV 45
 
-#define SCREEN_WIDTH 77
-#define SCREEN_HEIGHT 22
-#define SCREEN_SIZE SCREEN_WIDTH * SCREEN_HEIGHT
-
-#define THETA_SPACING 0.07
-#define PHI_SPACING 0.02
-
+extern void donut_init(void);
+extern void donut_exit(void);
 extern void render_frame(float A, float B, Donut flavor);
 
 #endif

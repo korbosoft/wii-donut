@@ -1,6 +1,6 @@
 .PHONY: clean gba gamecube wii
 
-VERSION	:=	v4.4.0
+VERSION	:=	v5.0.0
 
 CURDIR = $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
@@ -31,3 +31,4 @@ release:
 	@rm -fr ./korbodonut/
 	@gh release create $(VERSION) donut.zip donut-gc.dol donut-wii-debug.elf donut-gc-debug.elf
 	@rm -f donut-wii.map donut-gc.map donut-wii.zip
+
