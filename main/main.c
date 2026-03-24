@@ -147,6 +147,7 @@ int main(int argc,char **argv) {
 	}
 
 	u8 showFrosting = 0;
+	GX_SetCullMode(GX_CULL_FRONT);
 	while(SYS_MainLoop()) {
 		GX_SetNumChans(1);
 		guVecMultiply(view, &lpos, &lpos);
