@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <app version="1">
 	<name>Korbo's Donut Shop</name>
-	<version>5.0.0</version>
-	<release_date>20260402000000</release_date>
+	<version>5.1.0</version>
+	<release_date>20260325000000</release_date>
+	<!-- date format is YYYYMMDD000000-->
 	<coder>Korbosoft, emilydaemon, Andy Sloane</coder>
 	<short_description>Korbo's spinning donut!</short_description>
 	<long_description>Korbo's world-famous* donut shop is always open!
