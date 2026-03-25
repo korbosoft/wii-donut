@@ -28,7 +28,6 @@ release:
 	@cp donut-gc.elf donut-gc-debug.elf
 	@cp boot.elf donut-wii-debug.elf
 	@zip -rv donut ./korbodonut/
-	@rm -fr ./korbodonut/
 	@gh release create $(VERSION) donut.zip donut-gc.dol donut-wii-debug.elf donut-gc-debug.elf
-	@rm -f donut-wii-debug.elf donut-gc-debug.elf donut.zip
+	@rm -fr ./korbodonut/ donut-wii-debug.elf donut-gc-debug.elf donut.zip
 
