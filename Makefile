@@ -30,5 +30,5 @@ release:
 	@zip -rv donut ./korbodonut/
 	@rm -fr ./korbodonut/
 	@gh release create $(VERSION) donut.zip donut-gc.dol donut-wii-debug.elf donut-gc-debug.elf
-	@rm -f donut-wii.map donut-gc.map donut-wii.zip
+	@rm -f donut-wii-debug.elf donut-gc-debug.elf donut.zip
 
