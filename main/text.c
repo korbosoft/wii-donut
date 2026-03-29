@@ -34,3 +34,18 @@ void format_splash(const char *input, char *output) {
 int print(const char *str) {
 	return fwrite(str, strlen(str), 1, stdout);
 }
+
+inline char* u82Str(char* buf, u8 n) {
+	if (n >= 100) {
+		*buf++ = (n / 100) + '0';
+		n %= 100;
+		*buf++ = (n / 10) + '0';
+		*buf++ = (n % 10) + '0';
+	} else if (n >= 10) {
+		*buf++ = (n / 10) + '0';
+		*buf++ = (n % 10) + '0';
+	} else {
+		*buf++ = n + '0';
+	}
+	return buf;
+}

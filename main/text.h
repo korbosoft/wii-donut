@@ -8,5 +8,5 @@ extern void format_splash(const char *input, char *output);
 extern int rgb_escape(const u8 r, const u8 g, const u8 b, const bool fg);
 extern void format_info(const char *prefix, const char *input, char output[78]);
 extern void format_name(const char *input, char *output);
-
+extern char* u82Str(char* buf, u8 n);
 #endif

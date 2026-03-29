@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <malloc.h>
-#include <math.h>
 #include <unistd.h>
 #include <gccore.h>
 #include <wiiuse/wpad.h>
@@ -51,13 +49,13 @@ static void send_donut(void) {
 	bool prevPaused = paused;
 	music_pause(true);
 
-	print("\e[23;0H" "\e[0;0m\e[40;37m" "\e[104;37m"
+	print("\x1b[23;0H" "\x1b[0;0m\x1b[40;37m" "\x1b[104;37m"
 	"╔═══════════════════════════════════════════════════════════════════════════╗"
-	"║ \e[4mGBA Donut\e[0;0m\e[104;37m ┌─┐ Connect your GBA to controller port     " STRING_CANCEL " ║"
+	"║ \x1b[4mGBA Donut\x1b[0;0m\x1b[104;37m ┌─┐ Connect your GBA to controller port     " STRING_CANCEL " ║"
 	"║           │\xfb│ 2 with a GBA link cable.             ╒═──═╕                 ║"
 	"║           │2│                                      │+░░∞│                 ║"
 	"║           └─┘                                      └────┘      Waiting... ║"
-	"╚═══════════════════════════════════════════════════════════════════════════╝\e[0m");
+	"╚═══════════════════════════════════════════════════════════════════════════╝\x1b[0m");
 
 	while (wait_for_gba()) {
 		input_scan();
@@ -68,23 +66,23 @@ static void send_donut(void) {
 		}
 	}
 
-	print("\e[23;0H" "\e[104;37m"
+	print("\x1b[23;0H" "\x1b[104;37m"
 	"╔═══════════════════════════════════════════════════════════════════════════╗"
-	"║ \e[4mGBA Donut\e[0m\e[104;37m ┌─┐╔═══════════════════════════════════════╗                    ║"
+	"║ \x1b[4mGBA Donut\x1b[0m\x1b[104;37m ┌─┐╔═══════════════════════════════════════╗                    ║"
 	"║           │\xfc╪╝                                     ╒═╨─═╕                 ║"
 	"║           │2│                                      │+▒▒∞│                 ║"
 	"║           └─┘                                      └────┘ Transferring... ║"
-	"╚═══════════════════════════════════════════════════════════════════════════╝\e[0m");
+	"╚═══════════════════════════════════════════════════════════════════════════╝\x1b[0m");
 
 	send_rom();
 
-	print("\e[23;0H" "\e[104;37m"
+	print("\x1b[23;0H" "\x1b[104;37m"
 	"╔═══════════════════════════════════════════════════════════════════════════╗"
-	"║ \e[4mGBA Donut\e[0m\e[104;37m ┌─┐╔══════════════════√════════════════════╗                    ║"
+	"║ \x1b[4mGBA Donut\x1b[0m\x1b[104;37m ┌─┐╔══════════════════√════════════════════╗                    ║"
 	"║           │\xfc╪╝                                     ╒═╨─═╕                 ║"
 	"║           │2│                                      │+▓▓∞│                 ║"
 	"║           └─┘                                      └────┘        Success! ║"
-	"╚═══════════════════════════════════════════════════════════════════════════╝\e[0m");
+	"╚═══════════════════════════════════════════════════════════════════════════╝\x1b[0m");
 
 	sleep(3);
 	music_pause(!prevPaused);
@@ -129,10 +127,7 @@ int main(int argc,char **argv) {
 
 	music_init(title);
 
-	PROXY_3dMode(0.1F, 300.0F, 45, true, false, donAspect);
-	GX_SetVtxDesc(GX_VA_POS,  GX_DIRECT);
-	GX_SetVtxDesc(GX_VA_NRM,  GX_DIRECT);
-	GX_SetVtxDesc(GX_VA_CLR0, GX_DIRECT);
+	PROXY_3dMode(0.1F, 300.0F, 45, true, true, donAspect);
 	GX_SetVtxDesc(GX_VA_TEX0, GX_NONE);
 	PROXY_Camera3dSettings(0.0f,0.0f,0.0f, 0,1,0, 0,0,0);
 
@@ -166,17 +161,17 @@ int main(int argc,char **argv) {
 		input_down(0, 0);
 
 		if (showControls) {
-			print("\e[23;0H" "\e[104;37m" STRING_CONTROLS_BOX "\e[40m");
+			print("\x1b[23H" "\x1b[104;37m" STRING_CONTROLS_BOX "\x1b[40m");
 			// } else if (showFrosting) {
 
 		} else {
-			printf("\e[23;0H" "\e[104;37m"
+			printf("\x1b[23H" "\x1b[104;37m"
 			"╔═══════════════════════════════════════════════════════════════════════════╗"
-			"║ \e[4mKorbo's Donut Shop :3 %s   %s\e[0m\e[104;37m "                      "║"
+			"║ \x1b[4mKorbo's Donut Shop :3 %s   %s\x1b[0m\x1b[104;37m "                "║"
 			"║ Inspired by \"Wii Donut\" by emilydaemon <emilydaemon@donut.eu.org>         ║"
 			"║ Written, and otherwise created by Korbo Q. Lamp                           ║"
 			"║ Default Music is \"Addiction\" by Jogeir Liljedahl  " STRING_CONTROLS   " ║"
-			"╚═══════════════════════════════════════════════════════════════════════════╝\e[40m", VERSION, splash);
+			"╚═══════════════════════════════════════════════════════════════════════════╝\x1b[40m", VERSION, splash);
 			// printf("cwd: %s\n", getcwd(NULL, 0));
 		}
 
@@ -184,7 +179,7 @@ int main(int argc,char **argv) {
 			showFrosting--;
 
 		format_info("Flavor: ", frosting[frostingFlavor].name, frostingName);
-		printf("\e[0;0H" "%s" "\e[0;0m", (showFrosting != 0) ? frostingName : title);
+		printf("\x1b[H" "%s" "\x1b[0;0m", (showFrosting != 0) ? frostingName : title);
 
 		VIDEO_Flush();
 		VIDEO_WaitVSync();
@@ -198,7 +193,7 @@ int main(int argc,char **argv) {
 		} else if ((wiiPressed & WPAD_BUTTON_PLUS) | (GCPressed & PAD_BUTTON_Y)) {
 			frostingFlavor++;
 			frostingFlavor %= FROSTING_FLAVORS;
-			showFrosting = 50;
+			showFrosting = 100;
 		} else if ((wiiPressed & WPAD_BUTTON_A) | (GCPressed & PAD_BUTTON_A)) {
 			music_pause(paused);
 			paused = !paused;
