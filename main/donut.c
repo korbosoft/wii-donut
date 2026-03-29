@@ -190,7 +190,7 @@ void render_frame(float A, float B, Donut flavor) {
 
 					u8 r = R(col), g = G(col), b = B(col);
 
-					u8 y = (r * 0.2126f) + (g * 0.7152f) + (b * 0.0722);
+					u8 y = (r * 54) + (g * 183) + (b * 18) >> 8;
 
 					u8 val = (y >> 6) & 0x03;
 					u8 shift = (py * 2 + px) * 2;
