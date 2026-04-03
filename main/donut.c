@@ -11,14 +11,16 @@
 
 #include "metal_png.h"
 #include "coloredMetal_png.h"
+#include "sponge_png.h"
 
 static GRRLIB_texImg *donutBuffer;
 static GRRLIB_texImg *rainbowTex;
 static GRRLIB_texImg *greyTex;
 static GRRLIB_texImg *metalTex;
 static GRRLIB_texImg *colorMetalTex;
+static GRRLIB_texImg *spongeTex;
 
-void draw_frosting(f32 minor, f32 major, int nsides, int rings, bool filled, u32 col) {
+static void draw_frosting(f32 minor, f32 major, int nsides, int rings, bool filled, u32 col) {
 	const f32 ringDelta = 2.0f*M_PI/rings;
 	const f32 sideDelta = M_PI/nsides;
 	const f32 waveAmp = 0.5f;
@@ -67,7 +69,7 @@ void draw_frosting(f32 minor, f32 major, int nsides, int rings, bool filled, u32
 	}
 }
 
-GRRLIB_texImg *makeRainbowTex(u16 width, u16 height) {
+static GRRLIB_texImg *makeRainbowTex(u16 width, u16 height) {
 	GRRLIB_texImg *tex = GRRLIB_CreateEmptyTexture(width, height);
 	for (u16 j = 0; j < height; j++) {
 		for (u16 i = 0; i < width; i++) {
@@ -76,9 +78,9 @@ GRRLIB_texImg *makeRainbowTex(u16 width, u16 height) {
 			f32 r = sinf(M_PI*p);
 			f32 g = sinf(M_PI*(p + (1.0f/3.0f)));
 			f32 b = sinf(M_PI*(p + (2.0f/3.0f)));
-			r *= r*255.0f;
-			g *= g*255.0f;
-			b *= b*255.0f;
+			r *= r*255;
+			g *= g*255;
+			b *= b*255;
 			GRRLIB_SetPixelTotexImg(i, j, tex, RGBA(r, g, b, 255));
 		}
 	}
@@ -92,6 +94,7 @@ void donut_init(void) {
 	GRRLIB_SetPixelTotexImg(0, 0, greyTex, 0x808080FF);
 	metalTex = GRRLIB_LoadTexturePNG(metal_png);
 	colorMetalTex = GRRLIB_LoadTexturePNG(coloredMetal_png);
+	spongeTex = GRRLIB_LoadTexturePNG(sponge_png);
 }
 
 void donut_exit(void) {
@@ -102,7 +105,7 @@ void donut_exit(void) {
 	GRRLIB_FreeTexture(colorMetalTex);
 }
 
-void setReflectiveTexture(GRRLIB_texImg *tex) {
+static void setReflectiveTexture(GRRLIB_texImg *tex) {
 	GXTexObj texObj;
 
 	GX_SetNumTexGens(1);
@@ -148,7 +151,7 @@ void render_frame(float A, float B, Donut flavor) {
 	guMtxTransApply(model, model, 0.5f, 0.5f, 1.0f);
 	GX_LoadTexMtxImm(model, GX_TEXMTX0, GX_MTX3x4);
 
-	switch (flavor.special) {
+	switch (flavor.texture) {
 		case RAINBOW:
 			setReflectiveTexture(rainbowTex);
 			break;
@@ -158,12 +161,16 @@ void render_frame(float A, float B, Donut flavor) {
 		case COLORED_METAL:
 			setReflectiveTexture(colorMetalTex);
 			break;
+		case SPONGE:
+			setReflectiveTexture(spongeTex);
+			break;
 		default:
 			setReflectiveTexture(greyTex);
 	}
 
 	GRRLIB_DrawTorus(1, 2, 32, 64, true, RGBA(flavor.bottom.r, flavor.bottom.g, flavor.bottom.b, flavor.bottom.a));
-	draw_frosting(1, 2, 32, 64, true, RGBA(flavor.top.r, flavor.top.g, flavor.top.b, flavor.top.a));
+	if (flavor.texture == NONE)
+		draw_frosting(1, 2, 32, 64, true, RGBA(flavor.top.r, flavor.top.g, flavor.top.b, flavor.top.a));
 
 	GX_SetViewport(0,0, DONUT_WIDTH*2, DONUT_HEIGHT*4, 0, 1);
 	GX_SetScissor(0,0, DONUT_WIDTH*2, DONUT_HEIGHT*4);
@@ -188,9 +195,11 @@ void render_frame(float A, float B, Donut flavor) {
 
 					u8 r = R(col), g = G(col), b = B(col);
 
-					u32 l = (r*13933 + g*46871 + b*4732); // u16 integer math for relative luminance
+					// u16 integer math for relative luminance,
+					// modified to reach 65536 at the cost of accuracy
+					u16 l = (r*55 + g*184 + b*18);
 
-					u8 val = (l >> 22) & 0x03;
+					u8 val = (l >> 14) & 0x03; // l >> 14 = (l/256)/64
 					u8 shift = (py*2 + px)*2;
 					lutIndex |= (val << shift);
 
@@ -201,6 +210,9 @@ void render_frame(float A, float B, Donut flavor) {
 			r_avg >>= 3;
 			g_avg >>= 3;
 			b_avg >>= 3;
+			// if (r_avg == 256) r_avg = 255;
+			// if (g_avg == 256) g_avg = 255;
+			// if (b_avg == 256) b_avg = 255;
 			if (r_avg + g_avg + b_avg) {
 				if ((last_r != r_avg) || (last_g != g_avg) || (last_b != b_avg)) {
 					ptr = stpcpy(ptr, "\x1b[38;2;");

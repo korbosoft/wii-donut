@@ -36,6 +36,7 @@ int print(const char *str) {
 }
 
 inline char* u82Str(char* buf, u8 n) {
+// we only need three digits for 0-255
 	if (n >= 100) {
 		*buf++ = (n / 100) + '0';
 		n %= 100;
