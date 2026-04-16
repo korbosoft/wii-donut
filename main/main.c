@@ -14,7 +14,7 @@
 #include "grrproxy.h"
 #include "input.h"
 #include "font.h"
-#include "goombasend.h"
+#include "gba.h"
 #include "strings.h"
 #include "text.h"
 #include "flavors.h"
@@ -26,9 +26,6 @@
 
 // static GXRModeObj *rmode = NULL;
 static void *cxfb = NULL;
-
-u8 *resbuf, *cmdbuf;
-volatile u32 transval = 0, resval = 0;
 
 static bool paused = true;
 static u8 frostingFlavor = 0;
@@ -52,12 +49,12 @@ static void send_donut(void) {
 	print("\x1b[23;0H" "\x1b[0;0m\x1b[40;37m" "\x1b[104;37m"
 	"╔═══════════════════════════════════════════════════════════════════════════╗"
 	"║ \x1b[4mGBA Donut\x1b[0;0m\x1b[104;37m ┌─┐ Connect your GBA to controller port     " STRING_CANCEL " ║"
-	"║           │\xfb│ 2 with a GBA link cable.             ╒═──═╕                 ║"
-	"║           │2│                                      │+░░∞│                 ║"
+	"║           │\xfb│ 4 with a GBA link cable.             ╒═──═╕                 ║"
+	"║           │4│                                      │+░░∞│                 ║"
 	"║           └─┘                                      └────┘      Waiting... ║"
 	"╚═══════════════════════════════════════════════════════════════════════════╝\x1b[0m");
 
-	while (wait_for_gba()) {
+	while (!is_gba_present()) {
 		input_scan();
 		input_down(0, 0);
 		if ((wiiPressed & WPAD_BUTTON_PLUS) | (GCPressed & PAD_BUTTON_Y)) {
@@ -70,17 +67,17 @@ static void send_donut(void) {
 	"╔═══════════════════════════════════════════════════════════════════════════╗"
 	"║ \x1b[4mGBA Donut\x1b[0m\x1b[104;37m ┌─┐╔═══════════════════════════════════════╗                    ║"
 	"║           │\xfc╪╝                                     ╒═╨─═╕                 ║"
-	"║           │2│                                      │+▒▒∞│                 ║"
+	"║           │4│                                      │+▒▒∞│                 ║"
 	"║           └─┘                                      └────┘ Transferring... ║"
 	"╚═══════════════════════════════════════════════════════════════════════════╝\x1b[0m");
 
-	send_rom();
+	gba_send();
 
 	print("\x1b[23;0H" "\x1b[104;37m"
 	"╔═══════════════════════════════════════════════════════════════════════════╗"
 	"║ \x1b[4mGBA Donut\x1b[0m\x1b[104;37m ┌─┐╔══════════════════√════════════════════╗                    ║"
 	"║           │\xfc╪╝                                     ╒═╨─═╕                 ║"
-	"║           │2│                                      │+▓▓∞│                 ║"
+	"║           │4│                                      │+▓▓∞│                 ║"
 	"║           └─┘                                      └────┘        Success! ║"
 	"╚═══════════════════════════════════════════════════════════════════════════╝\x1b[0m");
 
@@ -99,7 +96,9 @@ int main(int argc,char **argv) {
 	input_init();
 	// WPAD_SetDataFormat(WPAD_CHAN_ALL, WPAD_FMT_BTNS_ACC);
 
-	// Initialize the file... thing. i can't really call it the "file system", can i
+	gba_init();
+
+	// Initialize the file... thing. I can't really call it the "file system", can I?
 	file_init();
 
 	// Allocate memory for the display in the uncached region
@@ -113,11 +112,11 @@ int main(int argc,char **argv) {
 	VIDEO_SetNextFramebuffer(cxfb);
 
 	// setup our projection matrix
-	float aspect;
+	float aspect = 4.0f/3.0f;
 	// if (CONF_GetAspectRatio() == CONF_ASPECT_16_9) {
 	// 	aspect = 16.0f/9.0f;
 	// } else {
-	aspect = 4.0f/3.0f;
+	// 	aspect = 4.0f/3.0f;
 	// }
 
 	float donAspect = aspect;

@@ -1,29 +1,28 @@
 /*
- * Copyright (C) 2016 FIX94
+ * Copyright (C) 2018 FIX94
  *
  * This software may be modified and distributed under the terms
- * of the MIT license.  See the LICENSE file for details.
+ * of the MIT license. See the LICENSE file for details.
  */
 
 /*
- * This program has been modified from its original version for
- * use within Trogdor: Reburninated by Mode8fx. It has also been
- * split into an additional header file, goombasend.h
+ * This program has been modified for use within
+ * Korbo's Donut Shop by korbosoft.
  */
 
-/*
- * This program has been further modified from the
- * Trogdor: Reburninated version for use within
- * Korbo's Wii Donut Mod by korbosoft.
- */
+#include "gba.h"
+#include "demo_mb_gba.h"
 
-#include "goombasend.h"
-#include "demo_gba.h"
+u8 *resbuf,*cmdbuf;
 
-void transcb(s32 chan, u32 ret) {
+volatile u32 transval = 0;
+void transcb(s32 chan, u32 ret)
+{
 	transval = 1;
 }
 
+
+volatile u32 resval = 0;
 void acb(s32 res, u32 val) {
 	resval = val;
 }
@@ -74,14 +73,14 @@ unsigned int calckey(unsigned int size) {
 void doreset() {
 	cmdbuf[0] = 0xFF; //reset
 	transval = 0;
-	SI_Transfer(1,cmdbuf,1,resbuf,3,transcb,SI_TRANS_DELAY);
+	SI_Transfer(3,cmdbuf,1,resbuf,3,transcb,SI_TRANS_DELAY);
 	while(transval == 0) ;
 }
 
 void getstatus() {
 	cmdbuf[0] = 0; //status
 	transval = 0;
-	SI_Transfer(1,cmdbuf,1,resbuf,3,transcb,SI_TRANS_DELAY);
+	SI_Transfer(3,cmdbuf,1,resbuf,3,transcb,SI_TRANS_DELAY);
 	while(transval == 0);
 }
 
@@ -89,7 +88,7 @@ u32 recv() {
 	memset(resbuf,0,32);
 	cmdbuf[0]=0x14; //read
 	transval = 0;
-	SI_Transfer(1,cmdbuf,1,resbuf,5,transcb,SI_TRANS_DELAY);
+	SI_Transfer(3,cmdbuf,1,resbuf,5,transcb,SI_TRANS_DELAY);
 	while(transval == 0) ;
 	return *(vu32*)resbuf;
 }
@@ -99,32 +98,38 @@ void send(u32 msg) {
 	cmdbuf[3]=(msg>>16)&0xFF;cmdbuf[4]=(msg>>24)&0xFF;
 	transval = 0;
 	resbuf[0] = 0;
-	SI_Transfer(1,cmdbuf,5,resbuf,1,transcb,SI_TRANS_DELAY);
+	SI_Transfer(3,cmdbuf,5,resbuf,1,transcb,SI_TRANS_DELAY);
 	while(transval == 0) ;
 }
 
-void prepare_rom() {
+s8 gba_init() {
 	cmdbuf = memalign(32, 32);
+	if (!cmdbuf) return -1;
 	resbuf = memalign(32, 32);
-	resval = 0;
-	//SI_GetTypeAsync(1, acb);
-}
-
-u8 wait_for_gba() {
-	//waiting for GBA in port 2...
-	SI_GetTypeAsync(1, acb);
-	if (resval) {
-		if (resval == 0x80 || resval & 8) {
-			resval = 0;
-			SI_GetTypeAsync(1, acb);
-		}
-		else if (SI_GBA)
-			return 0;
+	if (!resbuf) {
+		free(cmdbuf);
+		cmdbuf = NULL;
+		return -2;
 	}
 	return 1;
 }
 
-u8 send_rom() {
+bool is_gba_present() {
+	//waiting for GBA in port 4...
+	resval = 0;
+	SI_GetTypeAsync(3,acb);
+	if(resval) {
+		if(resval == 0x80 || resval & 8) {
+			resval = 0;
+			SI_GetTypeAsync(3,acb);
+		}
+		else if (resval & SI_GBA)
+			return 1;
+	}
+	return 0;
+}
+
+void gba_send() {
 	//GBA Found! Waiting for BIOS
 	resbuf[2]=0;
 	while(!(resbuf[2]&0x10)) {
@@ -132,7 +137,7 @@ u8 send_rom() {
 		getstatus();
 	}
 	//GBA Ready, sending rom
-	unsigned int sendsize = ((demo_gba_size+7)&~7);
+	unsigned int sendsize = ((demo_mb_gba_size+7)&~7);
 	unsigned int ourkey = calckey(sendsize);
 	//printf("Our Key: %08x\n", ourkey);
 	//get current sessionkey
@@ -144,11 +149,11 @@ u8 send_rom() {
 	//send over gba header
 	int i_gba;
 	for(i_gba = 0; i_gba < 0xC0; i_gba+=4)
-		send(__builtin_bswap32(*(vu32*)(demo_gba+i_gba)));
+		send(__builtin_bswap32(*(vu32*)(demo_mb_gba+i_gba)));
 	//send rom
 	u32 enc;
 	for (i_gba = 0xC0; i_gba < sendsize; i_gba += 4) {
-		enc = ((demo_gba[i_gba + 3] << 24) | (demo_gba[i_gba + 2] << 16) | (demo_gba[i_gba + 1] << 8) | (demo_gba[i_gba]));
+		enc = ((demo_mb_gba[i_gba + 3] << 24) | (demo_mb_gba[i_gba + 2] << 16) | (demo_mb_gba[i_gba + 1] << 8) | (demo_mb_gba[i_gba]));
 		fcrc = docrc(fcrc, enc);
 		sessionkey = (sessionkey * 0x6177614B) + 1;
 		enc ^= sessionkey;
@@ -166,5 +171,4 @@ u8 send_rom() {
 	send(fcrc);
 	//get crc back (unused)
 	recv();
-	return 0;
 }

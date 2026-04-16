@@ -63,7 +63,7 @@ ifneq ($(BUILD),$(notdir $(CURDIR)))
 #---------------------------------------------------------------------------------
 
 export ELFOUTPUT	:=	$(CURDIR)/$(TARGET)
-export GBAOUTPUT	:=	$(CURDIR)/../data/demo
+export GBAOUTPUT	:=	$(CURDIR)/../data/demo_mb
 
 export VPATH	:=	$(foreach dir,$(SOURCES),$(CURDIR)/$(dir)) \
 			$(foreach dir,$(DATA),$(CURDIR)/$(dir)) \
