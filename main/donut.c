@@ -13,12 +13,56 @@
 #include "coloredMetal_png.h"
 #include "sponge_png.h"
 
+static GRRLIB_texImg *shapeBuffer;
 static GRRLIB_texImg *donutBuffer;
 static GRRLIB_texImg *rainbowTex;
-static GRRLIB_texImg *greyTex;
+static GRRLIB_texImg *greyPixel;
 static GRRLIB_texImg *metalTex;
 static GRRLIB_texImg *colorMetalTex;
 static GRRLIB_texImg *spongeTex;
+
+void draw_mapped_torus(f32 minor, f32 major, int nsides, int rings, bool filled, u32 col) {
+	const f32 ringDelta = 2.0 * M_PI / rings;
+	const f32 sideDelta = 2.0 * M_PI / nsides;
+
+	f32 theta = 0.0f;
+	f32 cosTheta = 1.0f;
+	f32 sinTheta = 0.0f;
+	for (int i = 0; i < rings; i++) {
+		const f32 theta1 = theta + ringDelta;
+		const f32 cosTheta1 = cosf(theta1);
+		const f32 sinTheta1 = sinf(theta1);
+
+		const f32 u0 = (f32)i / rings;
+		const f32 u1 = (f32)(i + 1) / rings;
+
+		GX_Begin(filled ? GX_TRIANGLESTRIP : GX_LINESTRIP, GX_VTXFMT0, 2*(nsides + 1));
+		f32 phi = 0.0f;
+		for (int j = 0; j <= nsides; j++) {
+			const f32 cosPhi = cosf(phi), sinPhi = sinf(phi);
+			const f32 dist = major + minor*cosPhi;
+
+			const f32 v = (f32)j / nsides;
+
+			GX_Position3f32(cosTheta1*dist, -sinTheta1*dist, minor*sinPhi);
+			GX_Normal3f32(cosTheta1*cosPhi, -sinTheta1*cosPhi, sinPhi);
+			GX_Color1u32(col);
+			GX_TexCoord2f32(u1, v);
+
+			GX_Position3f32(cosTheta*dist, -sinTheta*dist, minor*sinPhi);
+			GX_Normal3f32(cosTheta*cosPhi, -sinTheta*cosPhi, sinPhi);
+			GX_Color1u32(col);
+			GX_TexCoord2f32(u0, v);
+
+			phi += sideDelta;
+		}
+		GX_End();
+
+		cosTheta = cosTheta1;
+		sinTheta = sinTheta1;
+		theta = theta1;
+	}
+}
 
 static void draw_frosting(f32 minor, f32 major, int nsides, int rings, bool filled, u32 col) {
 	const f32 ringDelta = 2.0f*M_PI/rings;
@@ -26,9 +70,9 @@ static void draw_frosting(f32 minor, f32 major, int nsides, int rings, bool fill
 	const f32 waveAmp = 0.5f;
 	const f32 waveFreq = 10.0f;
 
+	f32 theta = 0.0f;
 	f32 cosTheta = 1.0f;
 	f32 sinTheta = 0.0f;
-	f32 theta = 0.0f;
 	for (int i = 0; i < rings; i++) {
 		const f32 theta1 = theta + ringDelta;
 		const f32 cosTheta1 = cos(theta1);
@@ -37,12 +81,17 @@ static void draw_frosting(f32 minor, f32 major, int nsides, int rings, bool fill
 		const f32 cutZ0 = waveAmp/2*(waveAmp*2 + sinf(theta*waveFreq));
 		const f32 cutZ1 = waveAmp/2*(waveAmp*2 + sinf(theta1*waveFreq));
 
+		const f32 u0 = (f32)i / rings;
+		const f32 u1 = (f32)(i + 1) / rings;
+
 		GX_Begin(filled ? GX_TRIANGLESTRIP : GX_LINESTRIP, GX_VTXFMT0, 2*(nsides + 1));
 
 		f32 phi = 0.0f;
 		for (int j = 0; j <= nsides; j++) {
 			const f32 cosPhi = cosf(phi), sinPhi = sinf(phi);
 			const f32 dist = major + minor*cosPhi;
+
+			const f32 v = (f32)j / nsides;
 
 			f32 z = minor*sinPhi;
 			f32 z1 = z;
@@ -51,6 +100,7 @@ static void draw_frosting(f32 minor, f32 major, int nsides, int rings, bool fill
 			GX_Position3f32(cosTheta1*dist, -sinTheta1*dist, z1);
 			GX_Normal3f32(cosTheta1*cosPhi, -sinTheta1*cosPhi, sinPhi);
 			GX_Color1u32(col);
+			GX_TexCoord2f32(u1, v);
 
 			f32 z0 = z;
 			if (z0 < cutZ0) z0 = cutZ0;
@@ -58,6 +108,7 @@ static void draw_frosting(f32 minor, f32 major, int nsides, int rings, bool fill
 			GX_Position3f32(cosTheta*dist, -sinTheta*dist, z0);
 			GX_Normal3f32(cosTheta*cosPhi, -sinTheta*cosPhi, sinPhi);
 			GX_Color1u32(col);
+			GX_TexCoord2f32(u0, v);
 
 			phi += sideDelta;
 		}
@@ -88,28 +139,35 @@ static GRRLIB_texImg *makeRainbowTex(u16 width, u16 height) {
 }
 
 void donut_init(void) {
+	shapeBuffer = GRRLIB_CreateEmptyTexture(DONUT_WIDTH*2 + DONUT_WIDTH*2 % 4, DONUT_HEIGHT*4);
 	donutBuffer = GRRLIB_CreateEmptyTexture(DONUT_WIDTH*2 + DONUT_WIDTH*2 % 4, DONUT_HEIGHT*4);
 	rainbowTex = makeRainbowTex(256, 256);
-	greyTex = GRRLIB_CreateEmptyTexture(1, 1);
-	GRRLIB_SetPixelTotexImg(0, 0, greyTex, 0x808080FF);
+	greyPixel = GRRLIB_CreateEmptyTexture(1, 1);
+	GRRLIB_SetPixelTotexImg(0, 0, greyPixel, 0x808080FF);
 	metalTex = GRRLIB_LoadTexturePNG(metal_png);
 	colorMetalTex = GRRLIB_LoadTexturePNG(coloredMetal_png);
 	spongeTex = GRRLIB_LoadTexturePNG(sponge_png);
 }
 
 void donut_exit(void) {
+	GRRLIB_FreeTexture(shapeBuffer);
 	GRRLIB_FreeTexture(donutBuffer);
 	GRRLIB_FreeTexture(rainbowTex);
-	GRRLIB_FreeTexture(greyTex);
+	GRRLIB_FreeTexture(greyPixel);
 	GRRLIB_FreeTexture(metalTex);
 	GRRLIB_FreeTexture(colorMetalTex);
 }
 
-static void setReflectiveTexture(GRRLIB_texImg *tex) {
+static void set_tex(GRRLIB_texImg *tex, bool reflective) {
 	GXTexObj texObj;
 
 	GX_SetNumTexGens(1);
-	GX_SetTexCoordGen(GX_TEXCOORD0, GX_TG_MTX3x4, GX_TG_NRM, GX_TEXMTX0);
+	if (reflective) {
+		GX_SetTexCoordGen(GX_TEXCOORD0, GX_TG_MTX3x4, GX_TG_NRM, GX_TEXMTX0);
+	} else {
+		GX_SetTexCoordGen(GX_TEXCOORD0, GX_TG_MTX2x4, GX_TG_TEX0, GX_IDENTITY);
+	}
+
 	GX_InitTexObj(&texObj, tex->data, tex->w, tex->h, tex->format, GX_CLAMP, GX_CLAMP, GX_FALSE);
 	if (GRRLIB_Settings.antialias == false) {
 		GX_InitTexObjLOD(&texObj, GX_NEAR, GX_NEAR, 0.0f, 0.0f, 0.0f, 0, 0, GX_ANISO_1);
@@ -151,29 +209,37 @@ void render_frame(float A, float B, Donut flavor) {
 	guMtxTransApply(model, model, 0.5f, 0.5f, 1.0f);
 	GX_LoadTexMtxImm(model, GX_TEXMTX0, GX_MTX3x4);
 
-	switch (flavor.texture) {
-		case RAINBOW:
-			setReflectiveTexture(rainbowTex);
-			break;
-		case METAL:
-			setReflectiveTexture(metalTex);
-			break;
-		case COLORED_METAL:
-			setReflectiveTexture(colorMetalTex);
-			break;
-		case SPONGE:
-			setReflectiveTexture(spongeTex);
-			break;
-		default:
-			setReflectiveTexture(greyTex);
-	}
+	set_tex(greyPixel, false);
 
-	GRRLIB_DrawTorus(1, 2, 32, 64, true, RGBA(flavor.bottom.r, flavor.bottom.g, flavor.bottom.b, flavor.bottom.a));
+	draw_mapped_torus(1, 2, 32, 64, true, 0xFFFFFFFF);
 	if (flavor.texture == NONE)
-		draw_frosting(1, 2, 32, 64, true, RGBA(flavor.top.r, flavor.top.g, flavor.top.b, flavor.top.a));
+		draw_frosting(1, 2, 32, 64, true, 0xFFFFFFFF);
 
 	GX_SetViewport(0,0, DONUT_WIDTH*2, DONUT_HEIGHT*4, 0, 1);
 	GX_SetScissor(0,0, DONUT_WIDTH*2, DONUT_HEIGHT*4);
+	GRRLIB_Screen2Texture(0, 0, shapeBuffer, true);
+
+	switch (flavor.texture) {
+		case RAINBOW:
+			set_tex(rainbowTex, true);
+			break;
+		case METAL:
+			set_tex(metalTex, true);
+			break;
+		case COLORED_METAL:
+			set_tex(colorMetalTex, true);
+			break;
+		case SPONGE:
+			set_tex(spongeTex, false);
+			break;
+		default:
+			set_tex(greyPixel, false);
+	}
+
+	draw_mapped_torus(1, 2, 32, 64, true, RGBA(flavor.bottom.r, flavor.bottom.g, flavor.bottom.b, flavor.bottom.a));
+	if (flavor.texture == NONE)
+		draw_frosting(1, 2, 32, 64, true, RGBA(flavor.top.r, flavor.top.g, flavor.top.b, flavor.top.a));
+
 	GRRLIB_Screen2Texture(0, 0, donutBuffer, true);
 
 	char frameBuffer[DONUT_WIDTH*DONUT_HEIGHT*20 + 1];
@@ -192,18 +258,20 @@ void render_frame(float A, float B, Donut flavor) {
 					u8 img_y = (j*4) + py;
 
 					u32 col = GRRLIB_GetPixelFromtexImg(img_x, img_y, donutBuffer);
+					u32 shape = GRRLIB_GetPixelFromtexImg(img_x, img_y, shapeBuffer);
 
-					u8 r = R(col), g = G(col), b = B(col);
+					u8 cr = R(col), cg = G(col), cb = B(col);
+					u8 sr = R(shape), sg = G(shape), sb = B(shape);
 
 					// u16 integer math for relative luminance,
-					// modified to reach 65536 at the cost of accuracy
-					u16 l = (r*55 + g*184 + b*18);
+					// modified to reach exactly 65535 at the cost of accuracy
+					u16 l = (sr*55 + sg*184 + sb*18);
 
 					u8 val = (l >> 14) & 0x03; // l >> 14 = (l/256)/64
 					u8 shift = (py*2 + px)*2;
 					lutIndex |= (val << shift);
 
-					r_avg += r; g_avg += g; b_avg += b;
+					r_avg += cr; g_avg += cg; b_avg += cb;
 				}
 			}
 			// average

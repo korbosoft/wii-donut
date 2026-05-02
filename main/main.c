@@ -104,6 +104,7 @@ int main(int argc,char **argv) {
 	// Allocate memory for the display in the uncached region
 	cxfb = MEM_K0_TO_K1(SYS_AllocateFramebuffer(rmode));
 	VIDEO_ClearFrameBuffer(rmode, cxfb, COLOR_BLACK);
+	GRRLIB_FillScreen(0x000000FF);
 
 	// Initialise the console, required for printf
 	console_init(cxfb,20,20,rmode->fbWidth,rmode->xfbHeight,rmode->fbWidth*VI_DISPLAY_PIX_SZ);
@@ -124,10 +125,10 @@ int main(int argc,char **argv) {
 	donAspect *= 77.0f / 44.0f; // effectively halves the width to match the character aspect
 	// char boobs[] = " -:=+>|%}Ics1aeCo34wSZkhAE&D$HWQ";
 
-	music_init(title);
+	int titleLength = music_init(title);
+	int frostingLength;
 
 	PROXY_3dMode(0.1F, 300.0F, 45, true, true, donAspect);
-	GX_SetVtxDesc(GX_VA_TEX0, GX_NONE);
 	PROXY_Camera3dSettings(0.0f,0.0f,0.0f, 0,1,0, 0,0,0);
 
 	donut_init();
@@ -177,8 +178,8 @@ int main(int argc,char **argv) {
 		if (showFrosting)
 			showFrosting--;
 
-		format_info("Flavor: ", frosting[frostingFlavor].name, frostingName);
-		printf("\x1b[H" "%s" "\x1b[0;0m", (showFrosting != 0) ? frostingName : title);
+		frostingLength = format_info("Flavor: ", frosting[frostingFlavor].name, frostingName, false);
+		printf("\x1b[0;%iH" "%s" "\x1b[0;0m", 82 - (showFrosting ? frostingLength : titleLength), showFrosting ? frostingName : title);
 
 		VIDEO_Flush();
 		VIDEO_WaitVSync();
