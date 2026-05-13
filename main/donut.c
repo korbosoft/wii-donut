@@ -12,6 +12,7 @@
 #include "metal_png.h"
 #include "coloredMetal_png.h"
 #include "sponge_png.h"
+#include "sprinkles_png.h"
 
 static GRRLIB_texImg *shapeBuffer;
 static GRRLIB_texImg *donutBuffer;
@@ -20,6 +21,7 @@ static GRRLIB_texImg *greyPixel;
 static GRRLIB_texImg *metalTex;
 static GRRLIB_texImg *colorMetalTex;
 static GRRLIB_texImg *spongeTex;
+static GRRLIB_texImg *sprinklesTex;
 
 void draw_mapped_torus(f32 minor, f32 major, int nsides, int rings, bool filled, u32 col) {
 	const f32 ringDelta = 2.0 * M_PI / rings;
@@ -146,7 +148,8 @@ void donut_init(void) {
 	GRRLIB_SetPixelTotexImg(0, 0, greyPixel, 0x808080FF);
 	metalTex = GRRLIB_LoadTexturePNG(metal_png);
 	colorMetalTex = GRRLIB_LoadTexturePNG(coloredMetal_png);
-	spongeTex = GRRLIB_LoadTexturePNG(sponge_png);
+	spongeTex = GRRLIB_LoadTexturePNG(sprinkles_png);
+	sprinklesTex = GRRLIB_LoadTexturePNG(sprinkles_png);
 }
 
 void donut_exit(void) {
