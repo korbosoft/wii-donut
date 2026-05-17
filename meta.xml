@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <app version="1">
-	<name>Korbo's Donut Shop</name>
+	<name>Wii Donut: Rodrigo's fork</name>
 	<version>5.2.0</version>
 	<release_date>20260502000000</release_date>
 	<!-- date format is YYYYMMDD000000-->
-	<coder>Korbosoft</coder>
-	<short_description>Korbo's spinning donut!</short_description>
+	<coder>Rodrigo</coder>
+	<short_description>Spinning Donut for some reason</short_description>
 	<long_description>Korbo's world-famous* donut shop is always open!
 
 *Donut shop may or may not actually be world-famous.
